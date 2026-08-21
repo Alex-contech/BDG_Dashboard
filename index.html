@@ -1721,6 +1721,23 @@ const firebaseConfig = {
 const app = getApp();
 const db = getDatabase(app, firebaseConfig.databaseURL);
 const cotacoesRef = dbRef(db, 'cotacoes');
+
+/* Carimbo de última alteração.
+
+   Até a sincronização com o App (tools/sync/ no repositório
+   bdg-cotacoes-staging), NENHUMA cotação gravava data de alteração: o
+   objeto montado aqui e no painel de edição não tinha updatedAt nem
+   createdAt — só os registros de usuário têm. Sem isso, "em caso de
+   divergência prevalece a versão mais recente" não é uma regra que os
+   dados sustentem, e a sincronização precisa adivinhar a data pelo
+   /activityLog ou pelo instante embutido na push key.
+
+   Toda escrita de cotação passa por aqui. Date.now() é o relógio do
+   navegador, não do servidor — suficiente para ordenar edições, e sem o
+   custo de o valor só existir depois do round-trip. */
+function comCarimbo(entry){
+  return { ...entry, updatedAt: Date.now() };
+}
 const newlyAddedKeys = new Set();
 let seeded = false;
 let firstSnapshot = true;
@@ -1751,7 +1768,7 @@ onValue(cotacoesRef, (snapshot) => {
     RAW.forEach(item => {
       const newKey = dbPush(cotacoesRef).key;
       const clean = { ...item }; delete clean._new;
-      seedObj[newKey] = clean;
+      seedObj[newKey] = comCarimbo(clean);
     });
     dbSet(cotacoesRef, seedObj).then(()=>setSyncPill('ok')).catch(()=>setSyncPill('error'));
     return; // wait for the resulting onValue fire with real data
@@ -2380,7 +2397,7 @@ document.getElementById('btnUpdateQuotation').addEventListener('click', async ()
   const btn = document.getElementById('btnUpdateQuotation');
   btn.disabled = true; btn.textContent = 'Salvando...';
   try{
-    await dbSet(dbRef(db, 'cotacoes/'+editingKey), entry);
+    await dbSet(dbRef(db, 'cotacoes/'+editingKey), comCarimbo(entry));
     const cu = window.getCurrentUser ? window.getCurrentUser() : {uid:null, data:null};
     if(window.logActivity){
       window.logActivity(cu.uid, cu.data?.username || 'Usuário', 'Editou a cotação ' + (entry.ref || editingKey));
@@ -2488,7 +2505,7 @@ document.getElementById('btnAdd').addEventListener('click', ()=>{
   if(pendingPhotoBase64) entry.photo = pendingPhotoBase64;
   const btn = document.getElementById('btnAdd');
   btn.disabled = true; btn.textContent = 'Salvando...';
-  dbPush(cotacoesRef, entry).then((newRef)=>{
+  dbPush(cotacoesRef, comCarimbo(entry)).then((newRef)=>{
     newlyAddedKeys.add(newRef.key);
     const toast = document.getElementById('toastMsg');
     toast.textContent = '✓ Cotação salva na nuvem';
@@ -2657,7 +2674,7 @@ document.getElementById('importExcelInput').addEventListener('change', async (e)
     btnImport.textContent = 'Importando 0/'+entries.length+'...';
     let imported = 0;
     for(const entry of entries){
-      const newRef = await dbPush(cotacoesRef, entry);
+      const newRef = await dbPush(cotacoesRef, comCarimbo(entry));
       newlyAddedKeys.add(newRef.key);
       imported++;
       btnImport.textContent = 'Importando '+imported+'/'+entries.length+'...';
