@@ -1,0 +1,1829 @@
+/* ==========================================================================
+   app.css — BDG · Controle de Cotações (Samsung SDS Logistics)
+   ==========================================================================
+   Extraído do <style> embutido no index.html na Auditoria Geral de
+   01/08/2026 (Bloco 5). Eram 1.762 linhas de CSS e 38 media queries dentro
+   do HTML, o que tornava inviável qualquer trabalho sistemático de design:
+   o arquivo caiu de 3.253 para ~1.490 linhas e o CSS passou a ser
+   versionável, cacheável e revisável por conta própria.
+
+   Nenhuma regra foi alterada, reordenada ou removida nesta extração — a
+   cascata é exatamente a mesma de antes. O <link> que carrega este arquivo
+   fica DEPOIS do bootstrap.min.css no <head>, mantendo a ordem que as
+   regras de .form-control/.form-label dependem para prevalecer.
+   ========================================================================== */
+
+/* ============================================================
+   edit-quotation.css — BDG · Controle de Cotações (Samsung SDS Logistics)
+   Artifact 07/08 — Refatoração UI/UX (Fase 6)
+   ============================================================
+
+   O grid do Bootstrap (row/col/g-3) não precisa de nenhum ajuste — é
+   puro layout (margin/padding/flex), sem cor ou aparência própria, então
+   já se encaixa perfeitamente na identidade visual do BDG sem qualquer
+   sobreposição.
+
+   O que ESTE arquivo faz: garante que .form-control e .form-label (que
+   o Bootstrap estiliza com aparência clara por padrão — fundo branco,
+   texto escuro) herdem a aparência dark navy já usada pelos demais
+   inputs do BDG (input[type=text] já definido no CSS principal), em vez
+   de mostrar um campo branco destoante no meio do modal escuro.
+
+   Por que isso é necessário mesmo com input[type=text] já estilizado:
+   o Bootstrap define .form-control com propriedades específicas
+   (background-color, border-color, padding, border-radius) usando sua
+   própria cascata — como .form-control e input[type=text] têm
+   especificidade parecida, o resultado final depende da ORDEM de
+   carregamento dos dois arquivos CSS, o que é frágil. Este bloco fixa
+   o resultado de forma explícita, independentemente de qual CSS
+   carrega primeiro.
+
+   COMO INTEGRAR: adicionar este bloco ao <style> de index.html, DEPOIS
+   do link do Bootstrap CSS no <head> (ver README.md) — a ordem aqui
+   importa: este arquivo deve vir depois do bootstrap.min.css para que
+   suas regras (com especificidade equivalente) prevaleçam por ordem de
+   declaração. */
+
+.edit-section-manual .form-label{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:0.09em;
+  color:var(--ink-500); font-weight:700; margin-bottom:6px; display:block;
+}
+
+.edit-section-manual .form-control{
+  background:var(--navy-900); border:1px solid var(--line); color:var(--ink-100);
+  padding:11px 13px; border-radius:var(--r-sm); font-size:13px; font-family:'Inter', sans-serif;
+  box-shadow:none; /* remove a sombra interna clara padrão do Bootstrap */
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.edit-section-manual .form-control::placeholder{ color: var(--ink-500); opacity:0.7; }
+.edit-section-manual .form-control:focus{
+  background:var(--navy-900); /* Bootstrap clareia o fundo no :focus por padrão — mantém escuro */
+  border-color:var(--cyan-400); color:var(--ink-100);
+  box-shadow:0 0 0 3px rgba(0,174,239,0.14);
+}
+
+/* Bootstrap aplica -0.5*gutter de margin negativa em .row por padrão;
+   como o modal já tem padding próprio (.edit-section-body), confirma-se
+   que não sobra "sangria" visual nas bordas do card — sem isso, o grid
+   ficaria alinhado 1rem para fora do card em telas largas. */
+.edit-section-manual .edit-section-body .row{
+  margin-left:0; margin-right:0;
+}
+.edit-section-manual .edit-section-body .row > [class^="col-"],
+.edit-section-manual .edit-section-body .row > [class*=" col-"]{
+  padding-left:0; padding-right:0;
+}
+/* .g-3 já reintroduz o espaçamento entre colunas de forma simétrica
+   (gutter interno), então zerar o padding externo do .row acima não
+   quebra o espaçamento ENTRE os três campos — só remove a sangria nas
+   bordas externas do grid. */
+
+
+:root{
+  --navy-950:#04081A; --navy-900:#0A1230; --navy-800:#0F1A45; --navy-700:#172864;
+  --blue-600:#1428A0; --blue-500:#2F5CFF; --cyan-400:#00AEEF; --cyan-300:#5FD4FF;
+  --ink-100:#EEF1FC; --ink-300:#B7C0E8; --ink-500:#7C87C2;
+  --card-bg:#0D1638; --card-bg-soft:#101B47; --line:rgba(140,158,235,0.14);
+  --ok:#1FD8A8; --lost:#FF6B6B; --wait:#8C9AE8; --review:#FFC24B;
+  --sand:#E8D9B8; --sand-dim:rgba(232,217,184,0.55);
+  --r-sm:12px; --r-md:18px; --r-lg:26px; --r-xl:34px; --radius:18px;
+  --shadow: 0 30px 70px -28px rgba(2,5,22,0.75), 0 1px 0 rgba(255,255,255,0.04) inset;
+  --shadow-sm: 0 14px 32px -16px rgba(2,5,22,0.6);
+  --ease: cubic-bezier(.22,.9,.32,1);
+
+  /* ============================================================
+     DESIGN SYSTEM BDG · Fase 5 (Redesign Premium) — Etapa 1/6
+     ============================================================
+     Tokens formais que estendem a paleta acima (nenhum valor de cor
+     acima foi alterado — Fase 5 preserva 100% da identidade visual já
+     validada nas Fases 1-4). O que muda aqui é a FORMALIZAÇÃO: escala
+     de espaçamento, elevação em camadas, tipografia com escala modular
+     e superfícies de vidro (glass) como tokens nomeados — para que
+     toda tela nova (sidebar, dashboard, login, mapa) consuma os
+     mesmos valores em vez de reinventar sombra/blur/raio a cada card.
+
+     Decisão de arquitetura: tokens SOMADOS ao :root existente (não uma
+     segunda declaração :root, que sobrescreveria) — zero risco de
+     regressão para o CSS que já funciona hoje. */
+
+  /* ---------- escala de espaçamento (grid 8px, conforme prompt) ---------- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
+  --sp-7:32px; --sp-8:40px; --sp-9:48px; --sp-10:64px;
+
+  /* ---------- escala tipográfica modular (base 13px, razão ~1.2) ---------- */
+  --fs-xs:11px; --fs-sm:12.5px; --fs-base:13.5px; --fs-md:15px; --fs-lg:18px;
+  --fs-xl:22px; --fs-2xl:28px; --fs-3xl:36px;
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+
+  /* ---------- elevação em camadas (profundidade consistente) ----------
+     3 níveis nomeados, derivados das duas sombras que já existiam
+     (--shadow, --shadow-sm) + um nível novo mais sutil para elementos
+     inline (chips, badges, inputs) que antes não tinham sombra própria. */
+  --elev-1: 0 6px 16px -8px rgba(2,5,22,0.55);
+  --elev-2: var(--shadow-sm);
+  --elev-3: var(--shadow);
+  --elev-glow-cyan: 0 0 0 1px rgba(0,174,239,0.28), 0 8px 28px -10px rgba(0,174,239,0.35);
+
+  /* ---------- glassmorphism (superfícies de vidro nomeadas) ----------
+     Usado com moderação (login, painel lateral do mapa, overlays) —
+     nunca em superfícies de leitura densa (tabelas, KPIs numéricos),
+     onde contraste > efeito, conforme a filosofia "modernizar sem
+     descaracterizar" do prompt. */
+  --glass-bg: rgba(13,22,56,0.52);
+  --glass-bg-strong: rgba(13,22,56,0.72);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-blur: 18px;
+
+  /* ---------- duração/curva de transição (padronizado p/ toda a app) ---------- */
+  --dur-fast:120ms; --dur-base:220ms; --dur-slow:420ms;
+}
+
+/* ============================================================
+   UTILITÁRIOS DE SUPERFÍCIE — Design System, Etapa 1/6
+   Classes reutilizáveis para qualquer componente novo das próximas
+   etapas (sidebar, dashboard, login, mapa). Não aplicadas a nada
+   ainda nesta etapa — são a fundação, o consumo vem nas próximas.
+   ============================================================ */
+.glass{
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border: 1px solid var(--glass-border);
+}
+.glass-strong{
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(1.5);
+  border: 1px solid var(--glass-border);
+}
+.elevation-1{ box-shadow: var(--elev-1); }
+.elevation-2{ box-shadow: var(--elev-2); }
+.elevation-3{ box-shadow: var(--elev-3); }
+
+/* Foco de teclado visível e consistente — requisito de acessibilidade
+   (Seção 8.2 da Auditoria Técnica) aplicado aqui como token único,
+   para as próximas etapas herdarem automaticamente em cada componente
+   novo/revisado, em vez de cada tela definir seu próprio outline. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible{
+  outline: 2px solid var(--cyan-400);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* Tooltip — componente que ainda não existia como utilitário genérico
+   (o projeto usa title="" nativo em vários pontos hoje). Uso: envolver
+   o elemento-gatilho em <span class="tt" data-tt="texto">...</span>. */
+.tt{ position:relative; }
+.tt::after{
+  content: attr(data-tt);
+  position:absolute; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%) translateY(4px);
+  background: var(--glass-bg-strong); backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:1px solid var(--glass-border); color:var(--ink-100);
+  font-family:var(--font-body); font-size:var(--fs-xs); white-space:nowrap;
+  padding:6px 10px; border-radius:var(--r-sm); box-shadow:var(--elev-2);
+  opacity:0; pointer-events:none; transition:opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  z-index:60;
+}
+.tt:hover::after, .tt:focus-visible::after{ opacity:1; transform:translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce){
+  .tt::after{ transition:none; }
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  /* Camadas de luz + grade de pontos + base, todas na mesma regra —
+     antes viviam em duas regras "body{}" separadas e a segunda (grade
+     de pontos) sobrescrevia esta por completo, apagando as luzes
+     radiais sem ninguém perceber visualmente. Agora tudo soma, dando
+     mais profundidade em camadas (mesma ideia da referência de folhas:
+     várias camadas orgânicas sobrepostas, não um fundo plano). */
+  background:
+    radial-gradient(1200px 560px at 88% -12%, rgba(0,174,239,0.14), transparent 62%),
+    radial-gradient(1000px 640px at -12% 6%, rgba(47,92,255,0.20), transparent 58%),
+    radial-gradient(900px 700px at 12% 108%, rgba(31,216,168,0.07), transparent 65%),
+    radial-gradient(1400px 900px at 50% 120%, rgba(20,40,160,0.16), transparent 60%),
+    radial-gradient(circle at 1.5px 1.5px, rgba(140,158,235,0.10) 1px, transparent 0),
+    linear-gradient(180deg, var(--navy-950), var(--navy-900) 40%, var(--navy-950));
+  background-size:auto, auto, auto, auto, 26px 26px, 100% 100%;
+  background-attachment:fixed;
+  color:var(--ink-100); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+/* Grão fino sobre tudo — a mesma sensação orgânica/fotográfica da
+   referência de folhas, só que discreta o bastante para não atrapalhar
+   a leitura de números nas tabelas e KPIs. */
+body::after{
+  content:''; position:fixed; inset:0; z-index:2147483000; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:180px 180px; opacity:0.045; mix-blend-mode:overlay;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.display{font-family:'Space Grotesk',sans-serif;}
+
+/* ===== TICKET / STAMP MOTIF (elemento de assinatura) =====
+   Um pequeno "carimbo" de despacho aduaneiro, girado, usado com moderação
+   em pontos-chave (tela de acesso, cartões) para lembrar um manifesto de carga. */
+.doc-stamp{
+  position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:64px; height:64px; border:1.5px solid var(--sand-dim); border-radius:50%;
+  color:var(--sand-dim); font-family:'IBM Plex Mono',monospace; font-size:7.5px; letter-spacing:0.08em;
+  text-transform:uppercase; transform:rotate(-11deg); opacity:0.55; pointer-events:none; text-align:center; line-height:1.5;
+}
+.doc-stamp::before{ content:''; position:absolute; inset:5px; border:1px dashed var(--sand-dim); border-radius:50%; }
+.doc-stamp b{ font-size:11px; letter-spacing:0.02em; }
+
+/* ===== HEADER + ROTA ANIMADA ===== */
+header.top{ position:relative; padding:34px clamp(16px,4vw,56px) 30px; border-bottom:1px solid var(--line); overflow:hidden; }
+.route-track{ position:relative; height:30px; margin-top:18px; opacity:0.9; }
+.route-dash{ position:absolute; left:0; right:0; top:50%; height:0; border-top:1px dashed rgba(95,212,255,0.45); transform:translateY(-50%); }
+.route-icon{ position:absolute; top:50%; width:22px; height:22px; transform:translate(-50%,-50%); color:var(--cyan-300); filter:drop-shadow(0 0 6px rgba(0,174,239,0.6)); }
+.route-icon svg{ width:100%; height:100%; display:block; }
+.route-icon.plane{ animation: flyAcross 9s linear infinite; }
+.route-icon.ship{ animation: flyAcross 14s linear infinite; animation-delay:1.5s; color:#8C9AE8; }
+.route-icon.truck{ animation: flyAcross 11s linear infinite; animation-delay:4s; color:#22D3A6; }
+@keyframes flyAcross{
+  0%{ left:-4%; transform:translate(-50%,-50%) translateY(0); }
+  25%{ transform:translate(-50%,-50%) translateY(-6px); }
+  50%{ transform:translate(-50%,-50%) translateY(0); }
+  75%{ transform:translate(-50%,-50%) translateY(6px); }
+  100%{ left:104%; transform:translate(-50%,-50%) translateY(0); }
+}
+.header-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; position:relative; z-index:2; }
+.brand{display:flex; align-items:center; gap:14px;}
+.brand-mark{ width:44px;height:44px;border-radius:var(--r-md); background:linear-gradient(150deg,var(--blue-500),var(--blue-600) 60%,var(--cyan-400)); display:flex;align-items:center;justify-content:center; font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#fff; box-shadow:0 10px 26px -6px rgba(0,174,239,0.55), inset 0 1px 0 rgba(255,255,255,0.25); flex-shrink:0; }
+.brand-mark-stacked{ flex-direction:column; gap:1px; line-height:1; }
+.brand-mark-stacked span:first-child{ font-size:0.62em; letter-spacing:0.02em; }
+.brand-mark-stacked span:last-child{ font-size:0.42em; letter-spacing:0.1em; color:rgba(255,255,255,0.85); }
+.brand-mark-stacked i{ width:16px; height:1px; background:rgba(255,255,255,0.4); font-style:normal; margin:1px 0; }
+.brand-suffix{ display:block; font-size:0.42em; font-weight:600; color:var(--ink-400); text-transform:none; letter-spacing:0.02em; margin-top:2px; }
+.brand-text .eyebrow{ font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.14em;color:var(--cyan-300); text-transform:uppercase;margin-bottom:2px; }
+.brand-text h1{ font-family:'Space Grotesk';font-weight:700;font-size:clamp(20px,2.6vw,28px); margin:0; color:#fff; letter-spacing:-0.01em; }
+.brand-text p{margin:4px 0 0; color:var(--ink-300); font-size:13.5px;}
+.header-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.pill{ padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:600; background:var(--card-bg-soft); border:1px solid var(--line); color:var(--ink-100); display:flex; align-items:center; gap:7px; }
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan-400); position:relative;}
+.pill .dot::after{ content:''; position:absolute; inset:-4px; border-radius:50%; border:1px solid var(--cyan-400); animation:dotPulse 2.2s var(--ease) infinite; }
+@keyframes dotPulse{ 0%{ transform:scale(0.5); opacity:0.8; } 100%{ transform:scale(1.8); opacity:0; } }
+
+/* ===== KPI ===== */
+.kpi-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; padding:24px clamp(16px,4vw,56px) 6px; }
+
+/* ============================================================
+   RESGATE DO DASHBOARD ANTIGO (Fase 6, reformulação a pedido do usuário)
+   ============================================================
+   Cards de contagem de cotações (Total/Aprovadas/Perdidas/Em análise/
+   Clientes), reconstruídos com o visual NOVO (não o CSS .kpi antigo) —
+   mesma estrutura de hierarquia dos cards financeiros ao lado
+   (.exec-kpi-*): label pequeno em uppercase, valor grande em destaque,
+   texto auxiliar discreto, sparkline como fechamento visual do card.
+   Uma barra de acento colorida no topo (por status) substitui o
+   preenchimento colorido de fundo do dashboard antigo, mantendo a
+   identidade azul/navy predominante — a cor de status vira DESTAQUE
+   pontual, não o fundo inteiro do card. ============================================================ */
+.section-subtitle{
+  font-family:var(--font-display); font-size:12.5px; font-weight:600; color:var(--ink-300);
+  text-transform:uppercase; letter-spacing:0.06em;
+  margin: 22px clamp(16px,4vw,56px) 10px; display:flex; align-items:center; gap:8px;
+}
+.section-subtitle::before{
+  content:''; width:3px; height:13px; border-radius:2px;
+  background:linear-gradient(180deg, var(--blue-500), var(--cyan-400)); flex-shrink:0;
+}
+
+.dash-kpi-grid{
+  display:grid; grid-template-columns:repeat(5,1fr); gap:14px;
+  padding: 0 clamp(16px,4vw,56px) 6px;
+}
+@media(max-width:1100px){ .dash-kpi-grid{ grid-template-columns:repeat(3,1fr); } }
+@media(max-width:700px){ .dash-kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:460px){ .dash-kpi-grid{ grid-template-columns:1fr; } }
+
+.dash-kpi-card{
+  position:relative; overflow:hidden;
+  background: linear-gradient(160deg, var(--card-bg-soft), var(--card-bg));
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:16px 18px 14px;
+  box-shadow: var(--elev-1);
+  animation: execCardIn 0.5s var(--ease) backwards;
+}
+.dash-kpi-grid .dash-kpi-card:nth-child(1){ animation-delay:0.02s; }
+.dash-kpi-grid .dash-kpi-card:nth-child(2){ animation-delay:0.07s; }
+.dash-kpi-grid .dash-kpi-card:nth-child(3){ animation-delay:0.12s; }
+.dash-kpi-grid .dash-kpi-card:nth-child(4){ animation-delay:0.17s; }
+.dash-kpi-grid .dash-kpi-card:nth-child(5){ animation-delay:0.22s; }
+.dash-kpi-card::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--blue-500), var(--cyan-400)); /* padrão: acento azul da marca */
+}
+.dash-kpi-card.is-approved::before{ background: var(--ok); }
+.dash-kpi-card.is-lost::before{ background: var(--lost); }
+.dash-kpi-card.is-review::before{ background: var(--review); }
+
+.dash-kpi-head{ margin-bottom:8px; }
+.dash-kpi-label{ font-size:11.5px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; }
+
+/* ---------- valor + selo de tendência (Auditoria Geral 01/08, Bloco 5) ----------
+   Antes o valor ocupava a linha sozinho e a única marca de status era a faixa
+   de 3px no topo do card — "Aprovadas 106" e "Perdidas 74" tinham exatamente
+   o mesmo peso visual. Agora o valor divide a linha com um selo de variação
+   contra o período anterior, e o selo é quem carrega a cor semântica. O valor
+   segue branco de propósito: número grande colorido em cinco cards lado a
+   lado vira ruído, e é a comparação que precisa de cor, não a contagem. */
+.dash-kpi-valuerow{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin-bottom:4px; }
+.dash-kpi-value{ font-family:var(--font-display); font-size:26px; font-weight:700; color:#fff; line-height:1.15; }
+.dash-kpi-trend{
+  font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:11px; font-weight:600;
+  padding:2px 7px; border-radius:999px; line-height:1.5; white-space:nowrap;
+  border:1px solid transparent; letter-spacing:0.01em;
+}
+.dash-kpi-trend.is-good{ color:var(--ok);     background:rgba(34,211,166,0.10); border-color:rgba(34,211,166,0.28); }
+.dash-kpi-trend.is-bad{  color:var(--lost);   background:rgba(255,107,107,0.10); border-color:rgba(255,107,107,0.28); }
+.dash-kpi-trend.is-flat{ color:var(--ink-500); background:rgba(124,135,194,0.10); border-color:rgba(124,135,194,0.26); }
+/* Especificação de melhorias, item 2.1 — sub-texto agora carrega até 2
+   métricas separadas por "·" (% do total geral + taxa/contagem relativa
+   ao filtro), então deixou de caber sempre em uma linha. white-space:normal
+   permite quebrar; min-height evita que os cards "pulem" de altura entre
+   um card com texto de 1 linha e outro com 2. */
+.dash-kpi-sub{ font-size:11.5px; color:var(--ink-500); margin-bottom:10px; white-space:normal; line-height:1.4; min-height:2.8em; }
+.dash-kpi-spark{ width:100%; height:22px; display:block; }
+.dash-kpi-spark polyline{ fill:none; stroke:var(--cyan-400); stroke-width:1.6; opacity:0.85; }
+.dash-kpi-card.is-approved .dash-kpi-spark polyline{ stroke:var(--ok); }
+.dash-kpi-card.is-lost .dash-kpi-spark polyline{ stroke:var(--lost); }
+.dash-kpi-card.is-review .dash-kpi-spark polyline{ stroke:var(--review); }
+/* Ponto no fim da série (Auditoria Geral 01/08, Bloco 5) — declara qual ponta
+   da linha é "agora". stroke-width vira o diâmetro do ponto porque o elemento
+   é um traço de comprimento zero com ponta redonda; vector-effect no HTML
+   impede que o esticamento do viewBox o deforme. */
+.dash-kpi-sparkdot{ stroke:var(--cyan-400); stroke-width:4.5; opacity:1; }
+.dash-kpi-card.is-approved .dash-kpi-sparkdot{ stroke:var(--ok); }
+.dash-kpi-card.is-lost .dash-kpi-sparkdot{ stroke:var(--lost); }
+.dash-kpi-card.is-review .dash-kpi-sparkdot{ stroke:var(--review); }
+
+/* ============================================================
+   VERSÃO DE DEMONSTRAÇÃO EXECUTIVA — Fase 5, ajuste temporário
+   Dashboard financeiro (Material Design 3): cards com animação de
+   entrada, gradiente discreto, badge de tendência verde/vermelho e
+   barra de progresso relativa ao maior indicador do conjunto.
+   ============================================================ */
+.exec-kpi-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:16px;
+  padding:24px clamp(16px,4vw,56px) 6px;
+}
+@media(max-width:980px){ .exec-kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:560px){ .exec-kpi-grid{ grid-template-columns:1fr; } }
+
+/* Variante de 3 colunas (Especificação de melhorias, item 2.2): usada agora
+   que o card "Receita total" foi removido do grid de indicadores
+   financeiros — All-in, Total Collect e Handling Fee dividem o espaço
+   igualmente em vez de sobrar uma célula vazia. */
+.exec-kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
+@media(max-width:980px){ .exec-kpi-grid-3{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:560px){ .exec-kpi-grid-3{ grid-template-columns:1fr; } }
+
+.exec-kpi-card{
+  background: linear-gradient(160deg, var(--card-bg-soft), var(--card-bg));
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:18px 20px; position:relative; overflow:hidden;
+  box-shadow: var(--elev-1, 0 6px 16px -8px rgba(2,5,22,0.55));
+  animation: execCardIn 0.5s var(--ease) backwards;
+}
+.exec-kpi-grid .exec-kpi-card:nth-child(1){ animation-delay:0.02s; }
+.exec-kpi-grid .exec-kpi-card:nth-child(2){ animation-delay:0.08s; }
+.exec-kpi-grid .exec-kpi-card:nth-child(3){ animation-delay:0.14s; }
+.exec-kpi-grid .exec-kpi-card:nth-child(4){ animation-delay:0.20s; }
+@keyframes execCardIn{
+  from{ opacity:0; transform:translateY(10px) scale(0.98); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce){
+  .exec-kpi-card{ animation:none; }
+}
+.exec-kpi-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.exec-kpi-label{ font-size:11.5px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; }
+.exec-kpi-badge{
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px;
+  background:rgba(255,255,255,0.06); color:var(--ink-300);
+}
+.exec-kpi-badge.is-up{ background:rgba(34,211,166,0.15); color:#22D3A6; }
+.exec-kpi-badge.is-down{ background:rgba(255,107,107,0.15); color:#FF6B6B; }
+.exec-kpi-value{ font-family:'Space Grotesk'; font-size:26px; font-weight:700; color:#fff; line-height:1.15; margin-bottom:4px; }
+.exec-kpi-sub{ font-size:11.5px; color:var(--ink-500); margin-bottom:12px; }
+.exec-kpi-bar{ height:5px; border-radius:99px; background:rgba(140,158,235,0.15); overflow:hidden; }
+.exec-kpi-bar i{
+  display:block; height:100%; width:0%; border-radius:99px;
+  background:linear-gradient(90deg,var(--blue-500),var(--cyan-400));
+  transition: width 0.6s var(--ease);
+}
+
+/* ---------- Faturamento executivo (Versão de demonstração — Fase 5) ---------- */
+/* Correção (Especificação de melhorias, item 2.2): "Receita total" removida
+   do resumo (fatx-summary-grid: 4→3 colunas) e "Receita acumulada" removida
+   dos indicadores (fatx-kpi-grid: 5→4 colunas). */
+.fatx-summary-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+  padding:20px clamp(16px,4vw,56px) 6px;
+}
+@media(max-width:900px){ .fatx-summary-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:560px){ .fatx-summary-grid{ grid-template-columns:1fr; } }
+.fatx-summary-card{
+  display:flex; flex-direction:column; gap:6px;
+  background: var(--card-bg-soft); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:14px 16px;
+}
+.fatx-summary-label{ font-size:11px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; }
+.fatx-summary-value{ font-family:'Space Grotesk'; font-size:20px; font-weight:700; color:#fff; }
+
+.fatx-kpi-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+  padding:16px clamp(16px,4vw,56px) 6px;
+}
+@media(max-width:980px){ .fatx-kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:560px){ .fatx-kpi-grid{ grid-template-columns:1fr; } }
+.fatx-kpi-card{
+  display:flex; flex-direction:column; gap:5px; text-align:center;
+  background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:14px 10px;
+}
+.fatx-kpi-label{ font-size:10.5px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.04em; }
+.fatx-kpi-value{ font-family:'Space Grotesk'; font-size:17px; font-weight:700; color:#fff; }
+
+.fatx-period-select{
+  background:var(--card-bg-soft); border:1px solid var(--line); border-radius:var(--r-sm);
+  color:var(--ink-100); font-size:12px; padding:6px 10px; font-family:'Inter';
+}
+@media(max-width:1180px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .kpi-grid > .kpi:nth-child(5):last-child{ grid-column: 1 / -1; }
+}
+@media(max-width:620px){.kpi-grid{grid-template-columns:1fr;} .kpi-grid > .kpi:nth-child(5):last-child{ grid-column:auto; }}
+.kpi{ background:linear-gradient(165deg, var(--card-bg-soft), var(--card-bg) 55%); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px 20px 18px; position:relative; overflow:hidden; box-shadow:var(--shadow); transition:transform .25s var(--ease), box-shadow .25s var(--ease); }
+.kpi:hover{ transform:translateY(-3px); box-shadow:0 34px 76px -26px rgba(2,5,22,0.85), 0 1px 0 rgba(255,255,255,0.05) inset; }
+.kpi::after{ content:''; position:absolute; right:-34px; top:-34px; width:120px;height:120px; border-radius:50%; background:radial-gradient(circle, var(--kc,var(--cyan-400)) 0%, transparent 70%); opacity:0.16; }
+.kpi::before{ content:''; position:absolute; left:20px; right:20px; top:0; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent); }
+.kpi .label{font-size:11.5px; color:var(--ink-300); text-transform:uppercase; letter-spacing:0.08em; font-weight:600;}
+.kpi .value{font-family:'Space Grotesk'; font-size:30px; font-weight:700; color:#fff; margin-top:6px; letter-spacing:-0.02em;}
+.kpi .sub{font-size:12px; color:var(--ink-500); margin-top:5px;}
+.kpi.approved{--kc:var(--ok);} .kpi.approved .value{color:var(--ok);}
+.kpi.lost{--kc:var(--lost);} .kpi.lost .value{color:var(--lost);}
+.kpi.review{--kc:var(--review);} .kpi.review .value{color:var(--review);}
+.kpi.total{--kc:var(--cyan-400);}
+
+/* ===== FASE 4 · ETAPA 2 (UX/UI) — sparkline de tendência nos KPIs =====
+   Mini-gráfico de linha ao lado do valor principal, mostrando a variação
+   dos últimos meses (pontos calculados por sparklinePoints() em utils.js,
+   reaproveitando os mesmos dados já usados no comparativo mensal — nenhum
+   carregamento novo do Firebase). Puramente informativo/decorativo, por
+   isso aria-hidden no SVG: o valor e o percentual em texto continuam
+   sendo a fonte de verdade acessível do card. */
+.kpi-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
+.kpi-main{ display:flex; flex-direction:column; min-width:0; }
+.kpi-spark{ width:64px; height:22px; flex-shrink:0; overflow:visible; margin-bottom:3px; }
+.kpi-spark polyline{
+  fill:none; stroke:var(--kc,var(--cyan-400)); stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round; opacity:0.9;
+  filter:drop-shadow(0 0 4px var(--kc,var(--cyan-400)));
+}
+
+/* ===== FASE 4 · VISUAL (extensão) — animação de entrada nos cards de KPI =====
+   Leve fade + subida ao carregar/filtrar, em cascata (cada card ~40ms depois
+   do anterior). Puramente visual: não atrasa nem depende do carregamento de
+   dados do Firebase, e é desligada por completo para quem pede menos
+   movimento no sistema. */
+.kpi{ animation:kpiIn .38s var(--ease) backwards; }
+.kpi-grid > .kpi:nth-child(1){ animation-delay:0s; }
+.kpi-grid > .kpi:nth-child(2){ animation-delay:.04s; }
+.kpi-grid > .kpi:nth-child(3){ animation-delay:.08s; }
+.kpi-grid > .kpi:nth-child(4){ animation-delay:.12s; }
+.kpi-grid > .kpi:nth-child(5){ animation-delay:.16s; }
+@keyframes kpiIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion: reduce){ .kpi{ animation:none; } }
+
+/* ===== SECTION TITLES ===== */
+.section-title{ margin:34px clamp(16px,4vw,56px) 12px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.section-title h2{font-family:'Space Grotesk'; font-size:16px; margin:0; color:#fff; font-weight:600;}
+.section-title span{font-size:12px; color:var(--ink-500); font-family:'IBM Plex Mono';}
+
+/* ===== ADD FORM ===== */
+.add-card{
+  margin:0 clamp(16px,4vw,56px); background:linear-gradient(180deg, var(--card-bg-soft), var(--card-bg));
+  border:1px solid var(--line); border-radius:var(--r-lg); padding:20px 20px 18px; box-shadow:var(--shadow);
+}
+.add-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+@media(max-width:900px){.add-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:520px){.add-grid{grid-template-columns:1fr;}}
+.field{display:flex; flex-direction:column; gap:6px;}
+.field label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.09em; color:var(--ink-500); font-weight:700;}
+select, input[type=text], input[type=date], input[type=password], input[type=file]{
+  background:var(--navy-900); border:1px solid var(--line); color:var(--ink-100);
+  padding:11px 13px; border-radius:var(--r-sm); font-size:13px; font-family:'Inter'; outline:none; width:100%;
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+select:focus, input:focus{border-color:var(--cyan-400); box-shadow:0 0 0 3px rgba(0,174,239,0.14);}
+.add-actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center; }
+.btn{
+  padding:12px 22px; border-radius:var(--r-sm); font-size:13px; font-weight:700; cursor:pointer; border:none;
+  transition:transform .16s var(--ease), box-shadow .2s var(--ease), filter .16s ease; letter-spacing:0.01em;
+  position:relative;
+}
+.btn:active{transform:scale(0.97);}
+.btn-primary{
+  background:
+    radial-gradient(90px 46px at 18% 0%, rgba(255,255,255,0.28), transparent 65%),
+    linear-gradient(150deg,var(--blue-500),var(--blue-600) 55%,var(--cyan-400));
+  color:#fff; box-shadow:0 14px 30px -10px rgba(0,174,239,0.5), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.btn-primary:hover{ filter:brightness(1.08); box-shadow:0 18px 38px -10px rgba(0,174,239,0.62), inset 0 1px 0 rgba(255,255,255,0.25); }
+.btn-ghost{ background:rgba(255,255,255,0.02); border:1px solid var(--line); color:var(--ink-300); }
+.btn-ghost:hover{ border-color:var(--cyan-400); color:var(--cyan-300); background:rgba(0,174,239,0.06); }
+.toast{
+  display:none; align-items:center; gap:8px; padding:10px 15px; border-radius:var(--r-sm); font-size:12.5px; font-weight:600;
+  background:rgba(31,216,168,0.12); border:1px solid rgba(31,216,168,0.4); color:var(--ok);
+}
+.toast.show{display:inline-flex;}
+.hint{font-size:11.5px; color:var(--ink-500); margin-top:10px; line-height:1.5;}
+.hint b{color:var(--ink-300);}
+
+/* ===== FASE 4 · ETAPA 1 (UX/UI) — spinner de carregamento nos botões =====
+   Reaproveita o padrão já existente no JS (btn.disabled = true) sem precisar
+   tocar em cotacoes.js: qualquer botão desabilitado ganha automaticamente
+   um spinner girando à esquerda do texto ("Salvando...", etc.). */
+.btn:disabled{ cursor:not-allowed; opacity:0.85; padding-left:36px; position:relative; }
+.btn:disabled::before{
+  content:''; position:absolute; left:13px; top:50%; width:14px; height:14px; margin-top:-7px;
+  border:2px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%;
+  animation:btnSpin .65s linear infinite;
+}
+.btn-ghost:disabled::before{ border-color:rgba(124,135,194,0.35); border-top-color:var(--cyan-300); }
+@keyframes btnSpin{ to{ transform:rotate(360deg); } }
+
+/* ===== FASE 4 · ETAPA 1 (UX/UI) — feedback visual completo dos botões
+   (salvando → sucesso/erro), usado por setBtnBusy()/setBtnDone() em
+   cotacoes.js. O estado "busy" reaproveita o spinner acima; os estados de
+   resultado só piscam por um instante antes do botão voltar ao normal. ===== */
+.btn-success{ background:linear-gradient(150deg,#1FD8A8,#0F9D58) !important; color:#04241a !important; box-shadow:0 14px 30px -10px rgba(31,216,168,0.55) !important; animation:btnPulseOk .5s var(--ease); }
+.btn-success::before, .btn-error::before{ display:none; }
+.btn-error{ background:linear-gradient(150deg,#FF6B6B,#D63A3A) !important; color:#2b0505 !important; box-shadow:0 14px 30px -10px rgba(255,107,107,0.55) !important; animation:btnShake .4s var(--ease); }
+@keyframes btnPulseOk{ 0%{ transform:scale(0.94); } 60%{ transform:scale(1.03); } 100%{ transform:scale(1); } }
+@keyframes btnShake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+
+/* ===== FASE 4 · ETAPA 1 — transição de deslize entre telas (views) =====
+   Substitui o fade simples por um deslize horizontal com direção: ao
+   navegar para um item mais à direita no menu, a tela nova entra vindo da
+   direita; ao voltar, entra vindo da esquerda. A direção é decidida em
+   goToView() (cotacoes.js) via classes .dir-fwd/.dir-back no <body>. ===== */
+.view.active{ animation:viewInFwd .3s cubic-bezier(.2,.8,.2,1); }
+body.dir-back .view.active{ animation:viewInBack .3s cubic-bezier(.2,.8,.2,1); }
+@keyframes viewInFwd{ from{opacity:0; transform:translateX(18px);} to{opacity:1; transform:translateX(0);} }
+@keyframes viewInBack{ from{opacity:0; transform:translateX(-18px);} to{opacity:1; transform:translateX(0);} }
+@media (prefers-reduced-motion: reduce){ .view.active, body.dir-back .view.active{ animation:none; } }
+
+/* ===== FASE 4 · ETAPA 1 — agrupamento visual da navegação lateral =====
+   Três blocos (Operação / Análise / Conta) com rótulo pequeno e um
+   separador fino entre eles, sem alterar os data-view existentes. ===== */
+.nav-group{ display:flex; flex-direction:column; gap:7px; }
+.nav-group-label{
+  font-family:'IBM Plex Mono'; font-size:8.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--ink-500); text-align:center; padding:2px 0 1px; opacity:0.75;
+}
+.nav-divider{ height:1px; margin:4px 8px 5px; background:linear-gradient(90deg, transparent, var(--line), transparent); flex-shrink:0; }
+
+/* ===== FASE 4 · ETAPA 1 — micro-animação de abertura das seções do modal
+   de edição e do bloco de "Nova cotação" (accordion suave, sem exigir
+   biblioteca extra: reaproveita o próprio <details>/<summary> nativo). ===== */
+.edit-section-body{ animation:sectionOpen .22s var(--ease); }
+@keyframes sectionOpen{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
+.edit-section summary .chev{ display:inline-block; }
+
+/* ===== FASE 4 · ETAPA 1 — componente único de "estado vazio" reutilizável
+   (tabela principal, ranking de clientes, listas de Config, margem) — ícone
+   + frase curta + ação sugerida, no lugar de parágrafos explicativos. ===== */
+.empty-state{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; padding:28px 16px; color:var(--ink-500); }
+.empty-state .es-icon{ font-size:22px; line-height:1; opacity:0.85; margin-bottom:2px; }
+.empty-state .es-title{ font-size:12.5px; font-weight:600; color:var(--ink-300); }
+.empty-state .es-sub{ font-size:11.5px; color:var(--ink-500); max-width:320px; }
+.empty-state .es-action{ margin-top:8px; }
+.empty-state.compact{ padding:16px 10px; }
+
+/* ===== FASE 4 · ETAPA 1 — modal "Editar cotação" em seções colapsáveis
+   (mesma linguagem visual do step-card já usado em "Nova cotação"), com
+   uma barra de progresso de 3 segmentos no topo indicando os 3 blocos. ===== */
+.edit-progress{ display:flex; gap:6px; margin:2px 0 18px; }
+.edit-progress-seg{ flex:1; height:4px; border-radius:99px; background:rgba(140,158,235,0.18); overflow:hidden; }
+.edit-progress-seg i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--blue-500),var(--cyan-400)); transition:width .3s var(--ease); }
+.edit-progress-seg.is-visited i{ width:100%; }
+.edit-section{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:12px; overflow:hidden; background:rgba(255,255,255,0.015); }
+
+/* Versão de demonstração executiva — Fase 5, ajuste temporário: destaque
+   visual forte para a seção de valores manuais, já que ela é a única
+   fonte de dados dos indicadores nesta versão (motor de cálculo
+   temporariamente desligado da tela — ver nota completa no HTML). */
+.edit-section-manual{
+  border:1px solid rgba(0,174,239,0.35);
+  background: linear-gradient(135deg, rgba(0,174,239,0.09), rgba(20,40,160,0.07));
+  box-shadow: 0 0 0 1px rgba(0,174,239,0.12) inset, 0 12px 28px -16px rgba(0,174,239,0.25);
+}
+.edit-section-manual summary{ background:rgba(0,174,239,0.05); }
+.edit-section-manual summary:hover{ background:rgba(0,174,239,0.10); }
+.edit-section-manual .step-num{
+  box-shadow: 0 0 10px rgba(0,174,239,0.5);
+}
+.edit-section summary{
+  display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer; list-style:none;
+  font-family:'Space Grotesk'; font-size:13.5px; color:#fff; user-select:none; transition:background .15s var(--ease);
+}
+.edit-section summary::-webkit-details-marker{ display:none; }
+.edit-section summary::marker{ content:''; }
+.edit-section summary .chev{ margin-left:auto; color:var(--ink-500); transition:transform .2s var(--ease); font-size:11px; }
+.edit-section[open] summary .chev{ transform:rotate(180deg); }
+.edit-section summary:hover{ background:rgba(0,174,239,0.06); }
+.edit-section summary small{ font-size:11px; color:var(--ink-500); font-weight:500; margin-left:2px; }
+.edit-section .edit-section-body{ padding:6px 16px 18px; border-top:1px solid var(--line); }
+
+/* ============================================================
+   PAINEL DE VISUALIZAÇÃO/EDIÇÃO DE COTAÇÃO (Especificação de melhorias,
+   item 4.1) — substitui o antigo modal flutuante (editModalBackdrop).
+   Abre logo abaixo da lista, dentro da própria view-table, com altura
+   animada (gaveta) em vez de overlay de tela inteira. Dois modos
+   controlados por .is-edit-mode no #quotePanel (ver setQuotePanelMode()
+   em cotacoes.js). ============================================================ */
+.quote-panel{
+  margin: 18px clamp(16px,4vw,56px) 0;
+  background: linear-gradient(180deg, var(--card-bg-soft), var(--card-bg));
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:20px 22px; box-shadow: var(--shadow);
+  max-height: 78vh; overflow-y: auto; /* scroll próprio, independente da lista acima */
+  animation: quotePanelIn .28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes quotePanelIn{
+  from{ opacity:0; transform:translateY(14px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){ .quote-panel{ animation:none; } }
+
+.quote-panel-head{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:16px; gap:12px; flex-wrap:wrap;
+}
+.quote-panel-title{ display:flex; align-items:center; gap:10px; }
+.quote-panel-title h3{
+  font-family:'Space Grotesk'; color:#fff; margin:0; font-size:16px;
+}
+.quote-panel-title h3 #editRefLabel{ color:var(--cyan-300); font-size:13px; font-weight:500; margin-left:6px; }
+.quote-panel-mode-badge{
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px;
+  background:rgba(140,158,235,0.14); color:var(--ink-300);
+  text-transform:uppercase; letter-spacing:0.04em;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.quote-panel.is-edit-mode .quote-panel-mode-badge{
+  background: rgba(0,174,239,0.16); color: var(--cyan-300);
+}
+.quote-panel-head-actions{ display:flex; align-items:center; gap:8px; }
+.quote-panel-close{ border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--ink-300); }
+
+/* ---------- Modo visualização: resumo somente-leitura ---------- */
+.quote-panel-summary{ display:flex; flex-direction:column; gap:14px; }
+.quote-summary-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px 18px;
+}
+.quote-summary-grid-fin{
+  padding-top:12px; border-top:1px solid var(--line);
+}
+.quote-summary-row{ display:flex; flex-direction:column; gap:2px; }
+.quote-summary-row span{ font-size:10.5px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.04em; }
+.quote-summary-row b{ font-size:13.5px; color:#fff; font-weight:600; }
+.quote-summary-remarks{ padding-top:8px; }
+.quote-summary-remarks span{ font-size:10.5px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.04em; }
+.quote-summary-remarks p{ font-size:13px; color:var(--ink-300); margin:4px 0 0; line-height:1.5; }
+.quote-summary-photo img{
+  width:64px; height:64px; object-fit:cover; border-radius:8px;
+  border:1px solid var(--line); cursor:zoom-in;
+}
+
+/* ---------- Transição visualização → edição: cada campo ganha um leve
+   glow na borda inferior no instante em que se torna editável, guiando
+   o olho sem precisar de texto explicativo. ---------- */
+.quote-panel-edit-area .field input,
+.quote-panel-edit-area .field select,
+.quote-panel-edit-area .form-control{
+  animation: quoteFieldEditable .4s var(--ease);
+}
+@keyframes quoteFieldEditable{
+  from{ box-shadow: 0 1px 0 0 rgba(0,174,239,0.55); }
+  to{ box-shadow: 0 1px 0 0 rgba(0,174,239,0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .quote-panel-edit-area .field input,
+  .quote-panel-edit-area .field select,
+  .quote-panel-edit-area .form-control{ animation:none; }
+}
+
+/* ---------- Destaque da linha da tabela enquanto o painel dela está
+   aberto — reaproveita a cor de status já usada em .stamp/status, sem
+   introduzir paleta nova. ---------- */
+#tbody tr.is-panel-open{
+  box-shadow: inset 3px 0 0 0 var(--cyan-400);
+  background: rgba(0,174,239,0.05);
+}
+
+@media(max-width:640px){
+  .quote-panel{ padding:16px 14px; max-height:82vh; }
+  .quote-summary-grid{ grid-template-columns:1fr 1fr; }
+}
+
+/* ===== FASE 4 · ETAPA 1 — estado vazio com ação direta (Faturamento) ===== */
+.fat-empty{ align-items:center; }
+.fat-empty-actions{ margin-top:10px; }
+
+/* ===== NOVA COTAÇÃO — layout em passos + pré-visualização de PDF ===== */
+.new-quote-layout{ display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start; margin:0 clamp(16px,4vw,56px); }
+@media(max-width:1100px){ .new-quote-layout{ grid-template-columns:1fr; } }
+
+/* ---------- Versão de demonstração executiva — overlay de manutenção
+   (Fase 5, ajuste temporário). O conteúdo original da view fica borrado
+   e desativado por baixo (blur + pointer-events:none), sem ser removido
+   do DOM — reversível apagando apenas .view-maintenance/.maintenance-overlay.
+   Mantido por compatibilidade — ver .view-gate abaixo para o mecanismo
+   dinâmico que substitui este overlay estático na view "Adicionar"
+   (Especificação de melhorias, item 3). ---------- */
+.view-maintenance{ position:relative; min-height:60vh; }
+.view-maintenance > *:not(.maintenance-overlay){
+  filter: blur(6px) saturate(0.6) brightness(0.75);
+  pointer-events:none; user-select:none;
+}
+.maintenance-overlay{
+  position:absolute; inset:0; z-index:40;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.maintenance-card{
+  max-width:420px; text-align:center; padding:32px 28px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border:1px solid var(--glass-border); border-radius:var(--r-xl);
+  box-shadow: var(--elev-3);
+}
+.maintenance-icon{ font-size:40px; margin-bottom:14px; filter:drop-shadow(0 4px 10px rgba(255,194,75,0.35)); }
+.maintenance-card h3{ font-family:var(--font-display); color:#fff; font-size:17px; margin:0 0 10px; }
+.maintenance-card p{ color:var(--ink-300); font-size:13px; line-height:1.6; margin:0; }
+
+/* ============================================================
+   GATE GLOBAL DE MANUTENÇÃO (maintenance.js — #maintenanceGate)
+   ============================================================
+   Faltava CSS para este componente: o JS (checkMaintenanceGate) e o HTML
+   (injetado via buildMaintenanceDom) já existiam e funcionavam, mas sem
+   nenhum estilo — a tela aparecia sem formatação nenhuma. Reaproveita a
+   mesma base visual do .maintenance-card acima (cartão em glass sobre a
+   tela inteira), já que os dois cumprem o mesmo papel visual. */
+.maintenance-gate{
+  position:fixed; inset:0; z-index:500;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+  background: radial-gradient(circle at 50% 20%, rgba(10,20,64,0.92), rgba(4,8,26,0.97));
+}
+.maintenance-gate-card{
+  max-width:420px; width:100%; text-align:center; padding:36px 30px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border:1px solid var(--glass-border); border-radius:var(--r-xl);
+  box-shadow: var(--elev-3);
+  animation: maintenanceGateFloat 3s ease-in-out infinite;
+}
+/* Leve flutuação vertical no card inteiro — sugere "em progresso", não
+   "quebrado" (mesma intenção da animação do ícone, aplicada ao cartão
+   todo para ficar mais sutil). */
+@keyframes maintenanceGateFloat{
+  0%, 100%{ transform:translateY(0); }
+  50%{ transform:translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce){
+  .maintenance-gate-card{ animation:none; }
+}
+.maintenance-gate-icon{
+  font-size:44px; margin-bottom:16px;
+  filter:drop-shadow(0 4px 10px rgba(255,194,75,0.4));
+  animation: maintenanceIconFloat 3s ease-in-out infinite;
+}
+@keyframes maintenanceIconFloat{
+  0%, 100%{ transform:translateY(0) rotate(0deg); }
+  50%{ transform:translateY(-4px) rotate(-4deg); }
+}
+@media (prefers-reduced-motion: reduce){
+  .maintenance-gate-icon{ animation:none; }
+}
+.maintenance-gate-card h2{ font-family:var(--font-display); color:#fff; font-size:19px; margin:0 0 10px; }
+.maintenance-gate-card p{ color:var(--ink-300); font-size:13.5px; line-height:1.6; margin:0 0 20px; }
+/* Botão de bypass do admin: discreto de propósito (texto simples, sem
+   destaque visual chamativo) — a especificação pede que ele fique
+   integrado ao aviso, não como um call-to-action separado. */
+.maintenance-admin-btn{ font-size:12.5px; }
+.maintenance-gate-msg{
+  margin-top:12px; font-size:12px; min-height:1.4em; color:var(--ink-500);
+}
+.maintenance-gate-msg.is-error{ color:var(--lost); }
+
+/* ============================================================
+   GATE DE MANUTENÇÃO POR VIEW (Especificação de melhorias, item 3)
+   ============================================================
+   Substitui o .maintenance-overlay estático na view "Adicionar":
+   injetado dinamicamente por checkViewMaintenanceGate() (maintenance.js)
+   dentro da própria view (não em tela cheia — o resto do app continua
+   acessível). Mesma linguagem visual do gate global acima (glass card,
+   ícone flutuante), mas posicionado como overlay só da view, não da
+   tela inteira. */
+.view-gate{
+  position:absolute; inset:0; z-index:40;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+  background: rgba(4,8,26,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border-radius:var(--r-lg);
+}
+.view-gate-card{
+  max-width:420px; width:100%; text-align:center; padding:32px 28px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border:1px solid var(--glass-border); border-radius:var(--r-xl);
+  box-shadow: var(--elev-3);
+  animation: maintenanceGateFloat 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce){
+  .view-gate-card{ animation:none; }
+}
+.view-gate-icon{
+  font-size:40px; margin-bottom:14px;
+  filter:drop-shadow(0 4px 10px rgba(255,194,75,0.35));
+  animation: maintenanceIconFloat 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce){
+  .view-gate-icon{ animation:none; }
+}
+.view-gate-card h3{ font-family:var(--font-display); color:#fff; font-size:17px; margin:0 0 10px; }
+.view-gate-card p{ color:var(--ink-300); font-size:13px; line-height:1.6; margin:0 0 18px; }
+.view-gate-admin-btn{ font-size:12px; }
+.view-gate-msg{ margin-top:10px; font-size:11.5px; min-height:1.4em; color:var(--ink-500); }
+.view-gate-msg.is-error{ color:var(--lost); }
+/* A view precisa de position:relative para o .view-gate (absolute)
+   se ancorar corretamente dentro dela, não na tela inteira. */
+#view-add{ position:relative; }
+
+.new-quote-form{ display:flex; flex-direction:column; gap:14px; }
+.new-quote-form .add-card{ margin:0; }
+.step-card-title{ display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-size:14px; color:#fff; margin:0 0 14px; }
+.step-num{ width:22px; height:22px; border-radius:50%; background:linear-gradient(150deg,var(--blue-500),var(--cyan-400)); color:#fff; font-size:11.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'IBM Plex Mono'; }
+.step-card-title small{ font-size:11px; color:var(--ink-500); font-weight:500; text-transform:none; letter-spacing:0; margin-left:2px; }
+.modal-picker{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:18px; }
+.modal-opt{
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  width:108px; padding:16px 8px 13px; border-radius:16px; overflow:hidden; text-align:center; cursor:pointer;
+  border:1px solid var(--line); background:linear-gradient(165deg, var(--card-bg-soft), var(--navy-900) 65%);
+  transition:transform .18s var(--ease), border-color .18s var(--ease), box-shadow .2s var(--ease);
+}
+.modal-opt::before{ content:''; position:absolute; inset:0; opacity:0; pointer-events:none;
+  background:var(--modal-glow, radial-gradient(circle at 50% 0%, rgba(0,174,239,.35), transparent 70%)); transition:opacity .22s ease; }
+.modal-opt .ico{ position:relative; z-index:1; width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+  color:var(--modal-color, var(--cyan-300)); transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
+.modal-opt .ico svg{ width:100%; height:100%; filter:drop-shadow(0 3px 6px rgba(0,0,0,.35)); }
+.modal-opt .lbl{ position:relative; z-index:1; font-size:10.3px; font-weight:700; color:var(--ink-300); letter-spacing:0.04em; }
+.modal-opt .check{ position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%; z-index:2;
+  background:var(--modal-color, var(--cyan-400)); color:#04142c; font-size:10px; font-weight:900; line-height:16px;
+  transform:scale(0); transition:transform .22s cubic-bezier(.34,1.56,.64,1); box-shadow:0 3px 8px -1px rgba(0,0,0,.5); }
+.modal-opt:hover{ transform:translateY(-2px); border-color:color-mix(in srgb, var(--modal-color, var(--cyan-400)) 55%, var(--line)); box-shadow:0 12px 24px -12px rgba(0,174,239,.4); }
+.modal-opt:hover .ico{ transform:translateY(-2px) scale(1.08) rotate(-2deg); }
+.modal-opt:active{ transform:translateY(0) scale(.95); }
+.modal-opt.active{ border-color:var(--modal-color, var(--cyan-400)); background:linear-gradient(165deg, color-mix(in srgb, var(--modal-color, var(--cyan-400)) 16%, transparent), var(--navy-900) 70%);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--modal-color, var(--cyan-400)) 18%, transparent), 0 14px 28px -14px rgba(0,174,239,.55); }
+.modal-opt.active::before{ opacity:1; }
+.modal-opt.active .ico{ transform:scale(1.1); }
+.modal-opt.active .lbl{ color:#fff; }
+.modal-opt.active .check{ transform:scale(1); }
+.modal-opt[data-modal="AIR"]{ --modal-color:#00AEEF; --modal-glow:radial-gradient(circle at 50% 0%, rgba(0,174,239,.38), transparent 70%); }
+.modal-opt[data-modal="OCEAN"]{ --modal-color:#3D6BFF; --modal-glow:radial-gradient(circle at 50% 0%, rgba(61,107,255,.38), transparent 70%); }
+.modal-opt[data-modal="OCEAN/LCL"]{ --modal-color:#5FD4FF; --modal-glow:radial-gradient(circle at 50% 0%, rgba(95,212,255,.38), transparent 70%); }
+.modal-opt[data-modal="SEA/AIR"]{ --modal-color:#A78BFA; --modal-glow:radial-gradient(circle at 50% 0%, rgba(167,139,250,.38), transparent 70%); }
+.modal-opt[data-modal="TRUCK"]{ --modal-color:#22D3A6; --modal-glow:radial-gradient(circle at 50% 0%, rgba(34,211,166,.38), transparent 70%); }
+@media(max-width:480px){ .modal-opt{ width:86px; padding:12px 4px 10px; } .modal-opt .ico{ width:24px; height:24px; } }
+.modal-hint-empty{ font-size:12px; color:var(--ink-500); padding:18px 4px; text-align:center; border:1px dashed var(--line); border-radius:var(--r-md); }
+
+/* ---------- passo BLOQUEADO (Auditoria Geral 01/08, Bloco 5, seção 6.5) ----------
+   O Passo 2 da view Adicionar só faz sentido depois que um modal é escolhido
+   no Passo 1, porque os campos de AIR, OCEAN/FCL e OCEAN/LCL são diferentes
+   entre si. Isso sempre foi intencional, mas o cartão de espera tinha a mesma
+   aparência de um passo ativo — e um passo ativo e vazio lê como passo
+   quebrado. Estas regras dão a ele a linguagem visual de "ainda não liberado":
+   fundo rebaixado, borda tracejada, numeração acinzentada com cadeado. */
+.add-card.is-locked{
+  background:linear-gradient(180deg, rgba(10,18,48,0.55), rgba(10,18,48,0.30));
+  border-style:dashed; border-color:rgba(140,158,235,0.22); box-shadow:none;
+}
+.add-card.is-locked .step-card-title{ color:var(--ink-300); }
+.step-num.is-locked{
+  background:rgba(124,135,194,0.16); border:1px dashed rgba(140,158,235,0.35);
+  color:var(--ink-500); font-size:10px; box-shadow:none;
+}
+.step-locked-msg{ display:flex; flex-direction:column; gap:6px; padding:16px 18px; text-align:left;
+  border:1px dashed rgba(140,158,235,0.20); border-radius:var(--r-md); background:rgba(4,8,26,0.25); }
+.step-locked-msg strong{ font-size:13px; font-weight:600; color:var(--ink-300); }
+.step-locked-msg span{ font-size:12px; line-height:1.55; color:var(--ink-500); }
+.margem-preview{ display:flex; align-items:center; gap:9px; margin-top:4px; padding:11px 14px; border-radius:var(--r-md);
+  border:1px dashed var(--line); background:linear-gradient(90deg, rgba(0,174,239,0.06), transparent); transition:border-color .2s ease, background .2s ease; }
+.margem-preview .mp-icon{ font-size:15px; flex-shrink:0; }
+.margem-preview .mp-label{ font-size:11.5px; color:var(--ink-400); font-weight:600; text-transform:uppercase; letter-spacing:0.03em; }
+.margem-preview .mp-value{ margin-left:auto; font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:var(--ink-300); text-align:right; }
+.margem-preview.mp-good{ border-color:rgba(34,211,166,0.45); background:linear-gradient(90deg, rgba(34,211,166,0.1), transparent); }
+.margem-preview.mp-good .mp-value{ color:var(--ok); }
+.margem-preview.mp-low{ border-color:rgba(245,183,54,0.45); background:linear-gradient(90deg, rgba(245,183,54,0.1), transparent); }
+.margem-preview.mp-low .mp-value{ color:var(--review); }
+.margem-preview.mp-neg{ border-color:rgba(255,107,107,0.5); background:linear-gradient(90deg, rgba(255,107,107,0.12), transparent); }
+.margem-preview.mp-neg .mp-value{ color:var(--lost); }
+.bloco-card{ border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px 12px; background:var(--navy-900); margin-bottom:14px; }
+.bloco-card:last-child{margin-bottom:0;}
+.bloco-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.bloco-card-head h4{ margin:0; font-family:'Space Grotesk'; font-size:13px; color:var(--cyan-300); display:flex; align-items:center; gap:8px; }
+.bloco-badge{ font-family:'IBM Plex Mono'; font-size:10.5px; background:rgba(0,174,239,0.14); color:var(--cyan-300); padding:2px 9px; border-radius:999px; }
+.bloco-remove{ background:none; border:1px solid var(--line); color:var(--ink-500); border-radius:8px; padding:5px 10px; font-size:11px; cursor:pointer; }
+.bloco-remove:hover{ border-color:var(--lost); color:var(--lost); }
+.calc-subtitle{ grid-column:1/-1; color:var(--cyan-300); font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin:4px 0 -2px; }
+.calc-mini-btn{ font-size:10px; padding:1px 6px; margin-left:4px; border-radius:5px; cursor:pointer; }
+.new-quote-preview{ position:sticky; top:14px; }
+.preview-label{ font-size:11px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.08em; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.pdf-preview{ background:#fff; color:#1E2338; border-radius:10px; padding:18px 16px; box-shadow:var(--shadow); font-size:11px; max-height:78vh; overflow-y:auto; }
+.pdf-preview .pp-conf{ font-size:8px; color:#9098B4; letter-spacing:0.06em; }
+.pdf-preview .pp-brand{ text-align:right; font-family:'Space Grotesk'; font-weight:700; color:#0A1440; font-size:13px; }
+.pdf-preview .pp-brand small{ display:block; font-weight:400; font-size:8px; color:#6E76A0; }
+.pdf-preview hr{ border:none; border-top:1.4px solid #0A1440; margin:6px 0 0; }
+.pdf-preview .pp-banner{ background:#0A1440; color:#fff; padding:12px 14px; border-radius:6px; margin-top:8px; }
+.pdf-preview .pp-banner .pp-ref{ font-weight:700; font-size:13px; }
+.pdf-preview .pp-banner .pp-sub{ font-size:10px; color:#B4C8FF; margin-top:3px; }
+.pdf-preview .pp-meta{ display:flex; justify-content:space-between; margin-top:12px; font-size:10.5px; }
+.pdf-preview .pp-meta b{ display:block; font-size:9px; color:#6E76A0; font-weight:700; }
+.pdf-preview table.pp-table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:10.5px; }
+.pdf-preview table.pp-table td{ border:1px solid #D6DAF0; padding:6px 8px; }
+.pdf-preview table.pp-table td:first-child{ font-weight:700; background:#EBEEFA; width:42%; }
+.pdf-preview .pp-block-title{ font-weight:700; color:#0A1440; font-size:11.5px; margin-top:14px; }
+.pdf-preview table.pp-cost td:last-child{ text-align:right; }
+.pdf-preview table.pp-cost tr:last-child td{ background:#1428A0; color:#fff; font-weight:700; }
+.pdf-preview .pp-empty{ text-align:center; color:#9098B4; padding:30px 10px; font-size:11px; }
+
+/* ===== FILTER BAR ===== */
+.filter-bar{
+  margin:22px clamp(16px,4vw,56px) 0; background:linear-gradient(180deg, var(--card-bg-soft), var(--card-bg));
+  border:1px solid var(--line); border-radius:var(--r-lg); padding:16px 18px; box-shadow:var(--shadow);
+  display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; position:sticky; top:10px; z-index:50; backdrop-filter:blur(6px);
+}
+.field.wide{flex:1; min-width:132px;}
+.field.search{flex:1.6; min-width:180px;}
+.btn-reset{ background:transparent; border:1px solid var(--line); color:var(--ink-300); padding:9px 16px; border-radius:9px; font-size:12.5px; font-weight:600; cursor:pointer; transition:all .15s ease; white-space:nowrap; }
+.btn-reset:hover{border-color:var(--cyan-400); color:var(--cyan-300);}
+.chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin:14px clamp(16px,4vw,56px) 0; }
+.chip{ padding:7px 13px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--line); color:var(--ink-300); background:var(--card-bg); transition:all .15s ease; user-select:none; }
+.chip:hover{border-color:var(--cyan-400); color:#fff;}
+.chip.active{background:radial-gradient(50px 24px at 20% 0%, rgba(255,255,255,0.3), transparent 65%), linear-gradient(135deg,var(--blue-600),var(--cyan-400)); color:#fff; border-color:transparent;}
+
+/* ===== CHARTS ===== */
+.chart-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; padding:0 clamp(16px,4vw,56px); }
+.chart-grid.tri{ grid-template-columns:1fr 1fr 1fr; }
+/* Especificação de melhorias, item 7 (Faturamento): "Distribuição" deixa de
+   ser um bloco/gráfico grande e vira um elemento discreto e secundário ao
+   lado do gráfico de evolução (que passa a ser o dado principal). Proporção
+   assimétrica ~30/70 em vez dos ~57/43 do .chart-grid padrão. */
+/* Auditoria Geral 01/08, Bloco 2 — era 0.45fr 1fr para acomodar a pizza
+   chartFatxDist ao lado da evolução. Com a pizza removida (duplicava o
+   chartExecShare do Dashboard), a evolução ocupa a linha inteira. */
+.chart-grid.fatx-evol{ grid-template-columns:1fr; }
+@media(max-width:1080px){.chart-grid, .chart-grid.tri, .chart-grid.fatx-evol{grid-template-columns:1fr;}}
+.card{
+  background:
+    radial-gradient(170px 130px at 14% -8%, rgba(255,255,255,0.05), transparent 70%),
+    linear-gradient(165deg, var(--card-bg-soft), var(--card-bg) 60%);
+  border:1px solid var(--line); border-radius:var(--r-lg); padding:20px 20px 14px; box-shadow:var(--shadow); position:relative; transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+}
+.card:hover{ transform:translateY(-2px); box-shadow:0 34px 76px -26px rgba(2,5,22,0.85); }
+.card::before{ content:''; position:absolute; left:20px; right:20px; top:0; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); pointer-events:none; }
+.card h3{ font-family:'Space Grotesk'; font-size:13.5px; font-weight:600; margin:0 0 12px; color:var(--ink-100); display:flex; justify-content:space-between; align-items:center; }
+.card h3 small{font-size:11px; color:var(--ink-500); font-weight:500; font-family:'Inter';}
+.chart-wrap{position:relative; height:260px;}
+.chart-wrap.tall{height:320px;}
+/* Auditoria Geral 01/08 (Bloco 5) — chartSeller virou barra horizontal
+   agrupada: são 6 status por vendedor, ou seja 12 barras com dois vendedores
+   na base. Nos 260px padrão elas ficariam com ~15px cada, contando o espaço
+   da legenda. Com 340px cada barra respira, e ainda sobra folga para o
+   terceiro e o quarto vendedor entrarem sem apertar o gráfico de novo. */
+.chart-wrap.seller{height:340px;}
+@media(max-width:700px){ .chart-wrap.seller{height:300px;} }
+
+/* ============================================================
+   RANKING DE CLIENTES (Especificação de melhorias, item 6)
+   ============================================================
+   Gráfico de pizza reduzido (~40%) + tabela (~60%) lado a lado em telas
+   largas; empilhados (gráfico em cima, tabela embaixo) abaixo do mesmo
+   breakpoint já usado por .chart-grid (1080px), para manter consistência
+   de comportamento responsivo com o resto do app. */
+.client-ranking-card{ margin:0 clamp(16px,4vw,56px); }
+.client-ranking-body{ display:grid; grid-template-columns:0.7fr 1fr; gap:20px; align-items:start; }
+@media(max-width:1080px){ .client-ranking-body{ grid-template-columns:1fr; } }
+.client-ranking-chart{ height:260px; }
+.client-ranking-table-wrap{ margin:0; box-shadow:none; }
+.client-ranking-table-wrap .table-scroll{ max-height:280px; }
+
+/* ============================================================
+   SELETOR DE GRÁFICOS DOS INDICADORES (Especificação de melhorias,
+   item 2.3) — card único com 4 abas, cada uma com um propósito de
+   leitura diferente. Reaproveita a linguagem visual de .chip/.chip-row
+   já usada em outros seletores do app (em vez de criar um componente
+   de tab novo do zero).
+   ============================================================ */
+.kpi-chart-card{ margin:0 clamp(16px,4vw,56px); }
+.kpi-chart-tabs{ margin:0 0 16px; }
+.kpi-chart-panes{ position:relative; }
+.kpi-chart-pane{
+  display:none;
+  animation: kpiChartFadeIn .3s var(--ease);
+}
+.kpi-chart-pane.is-active{ display:block; }
+/* Fade + leve scale-in ao trocar de aba — evita o "pulo" instantâneo de
+   canvas trocado sem transição nenhuma. Nada de morphing de dados entre
+   tipos de gráfico diferentes (linha → pizza): Chart.js 4.4.1 (já em
+   uso) não tem suporte nativo robusto para isso, e tentar simular via
+   CSS ficaria visualmente confuso — fade é a escolha certa aqui. */
+@keyframes kpiChartFadeIn{
+  from{ opacity:0; transform:scale(0.98); }
+  to{ opacity:1; transform:scale(1); }
+}
+@media (prefers-reduced-motion: reduce){
+  .kpi-chart-pane{ animation:none; }
+}
+
+.stamp{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:5px; font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:600; letter-spacing:0.03em; border:1.5px solid currentColor; transform:rotate(-2deg); white-space:nowrap; }
+.stamp.APPROVED{color:var(--ok);} .stamp.LOST{color:var(--lost);} .stamp.NO-RESPONSE{color:var(--wait);} .stamp.UNDER-REVIEW{color:var(--review);} .stamp.ND{color:var(--ink-500);}
+.new-badge{ font-family:'IBM Plex Mono'; font-size:9px; font-weight:700; background:var(--cyan-400); color:#04122E; padding:2px 6px; border-radius:4px; margin-left:6px; letter-spacing:0.04em; }
+
+/* ===== COMPARATIVO MENSAL ===== */
+.compare-card{ margin:0 clamp(16px,4vw,56px); background:var(--card-bg); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px; box-shadow:var(--shadow); }
+.compare-selects{ display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+.compare-vs{ font-family:'Space Grotesk'; font-weight:700; color:var(--cyan-300); font-size:14px; }
+.compare-kpis{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px; }
+@media(max-width:700px){.compare-kpis{grid-template-columns:1fr;}}
+.compare-summary{ margin:0 0 18px; padding:16px; border-radius:14px; background:rgba(255,255,255,0.02); border:1px solid var(--line); }
+.compare-summary h4{ color:#fff; font-family:'Space Grotesk'; font-size:14px; margin:0 0 12px; display:flex; flex-direction:column; gap:2px; }
+.compare-summary h4 span{ color:var(--ink-500); font-weight:400; font-size:11px; font-family:'Inter'; }
+.compare-summary-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 2px; border-bottom:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; }
+.compare-summary-row:last-child{ border-bottom:none; }
+.cs-label{ color:var(--ink-500); font-size:12.5px; flex:1 1 130px; }
+.cs-vals{ display:flex; align-items:center; gap:6px; color:#fff; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:13px; }
+.cs-vals .cs-arrow{ color:#5C68A8; font-weight:400; }
+.cs-delta{ font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+.cs-delta.up{ color:var(--ok); background:rgba(34,211,166,0.1); }
+.cs-delta.down{ color:var(--lost); background:rgba(255,107,107,0.1); }
+.cs-delta.flat{ color:#7C87C2; background:rgba(124,135,194,0.1); }
+.compare-col{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--card-bg-soft); }
+.compare-col h4{ margin:0 0 10px; font-family:'Space Grotesk'; font-size:13px; color:#fff; }
+.compare-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-300); padding:5px 0; border-bottom:1px dashed var(--line); }
+.compare-row:last-child{border-bottom:none;}
+.compare-row b{color:#fff;}
+.compare-row .delta{font-family:'IBM Plex Mono'; font-size:11px;}
+.delta.up{color:var(--ok);} .delta.down{color:var(--lost);}
+.chart-wrap.compare{height:280px;}
+/* Especificação de melhorias, item 5.2 — seletor de granularidade
+   (Ano/Semestre/Trimestre/Bimestre/Mês/Semana), mesma linguagem visual
+   de .field já usada no resto do app. */
+.compare-granularity-row{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.compare-granularity-row label{ font-size:11.5px; color:var(--ink-500); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; }
+.compare-granularity-row select{ min-width:140px; }
+/* Linhas de valor monetário nos cards de período — mesma classe .compare-row,
+   só com uma linha divisória mais forte acima para separar visualmente
+   contagens/taxas (quantidade) dos valores financeiros. */
+.compare-row-money:first-of-type{ border-top:1px solid var(--line); margin-top:4px; padding-top:9px; }
+
+/* ===== FATURAMENTO E MARGEM (Fase Extra · nova view) ===== */
+.fat-empty{ margin:0 clamp(16px,4vw,56px) 20px; display:flex; align-items:flex-start; gap:14px; padding:16px 18px;
+  border-radius:var(--r-lg); border:1px dashed rgba(245,183,54,0.5); background:linear-gradient(90deg, rgba(245,183,54,0.08), transparent); }
+.fat-empty-icon{ font-size:22px; flex-shrink:0; line-height:1; }
+.fat-empty b{ color:#fff; font-family:'Space Grotesk'; font-size:13.5px; }
+.fat-empty p{ margin:6px 0 0; font-size:12.5px; color:var(--ink-400); line-height:1.5; }
+.fat-ranking{ display:flex; flex-direction:column; gap:10px; margin-top:6px; max-height:280px; overflow-y:auto; padding-right:4px; }
+.fat-rank-row{ display:grid; grid-template-columns:22px 1fr 76px; align-items:center; gap:10px; }
+.fat-rank-pos{ width:22px; height:22px; border-radius:50%; background:var(--card-bg-soft); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700; color:var(--ink-400); font-family:'IBM Plex Mono'; }
+.fat-rank-row:nth-child(1) .fat-rank-pos{ background:linear-gradient(150deg,#FFD65C,#F5B736); color:#3A2900; border-color:transparent; }
+.fat-rank-row:nth-child(2) .fat-rank-pos{ background:linear-gradient(150deg,#D9DEEF,#A9B2CE); color:#1D2340; border-color:transparent; }
+.fat-rank-row:nth-child(3) .fat-rank-pos{ background:linear-gradient(150deg,#E3AD79,#C07E42); color:#2E1B08; border-color:transparent; }
+.fat-rank-info{ min-width:0; }
+.fat-rank-name{ font-size:12.5px; color:var(--ink-200); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+.fat-rank-bar-wrap{ height:6px; border-radius:999px; background:rgba(255,255,255,0.06); margin-top:5px; overflow:hidden; }
+.fat-rank-bar{ height:100%; border-radius:999px; background:linear-gradient(90deg,var(--blue-500),var(--cyan-400)); transition:width .5s cubic-bezier(.2,.8,.2,1); }
+.fat-rank-value{ text-align:right; font-family:'IBM Plex Mono'; font-size:12px; font-weight:700; color:var(--ok); }
+.fat-empty-mini{ font-size:12px; color:var(--ink-500); text-align:center; padding:24px 4px; }
+td.fat-pos{ color:var(--ok); font-weight:700; }
+td.fat-neg{ color:var(--lost); font-weight:700; }
+
+/* ===== TABLE ===== */
+.table-wrap{ margin:0 clamp(16px,4vw,56px) 50px; background:var(--card-bg); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow); }
+.table-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px 10px; flex-wrap:wrap; gap:10px; }
+.table-head h3{font-family:'Space Grotesk'; font-size:14px; margin:0; color:#fff;}
+.export-btns{ display:flex; gap:8px; }
+.btn-export{
+  border:none; border-radius:9px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer;
+  font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:6px; transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn-export:active{ transform:scale(0.96); }
+.btn-export.xlsx{ background:linear-gradient(135deg,#0F9D58,#22D3A6); color:#04241a; box-shadow:0 8px 18px -8px rgba(34,211,166,0.5); }
+.btn-export.pdf{ background:linear-gradient(135deg,#D63A3A,#FF6B6B); color:#2b0505; box-shadow:0 8px 18px -8px rgba(255,107,107,0.5); }
+.table-scroll{max-height:520px; overflow:auto;}
+table{width:100%; border-collapse:collapse; font-size:12.5px;}
+thead th{ position:sticky; top:0; background:var(--navy-900); text-align:left; padding:10px 14px; font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-500); border-bottom:1px solid var(--line); cursor:pointer; white-space:nowrap; z-index:2; }
+thead th:hover{color:var(--cyan-300);}
+tbody td{padding:10px 14px; border-bottom:1px solid var(--line); color:var(--ink-100); white-space:nowrap;}
+tbody tr:hover{background:rgba(255,255,255,0.03);}
+tbody tr.is-new{background:rgba(0,174,239,0.06);}
+.seller-tag{ font-family:'IBM Plex Mono'; font-size:10.5px; padding:2px 8px; border-radius:5px; background:var(--navy-900); color:var(--cyan-300); border:1px solid var(--line); }
+
+/* ============================================================
+   TABELA DE DESEMPENHO POR VENDEDOR (Especificação de melhorias,
+   item 5.1) — reaproveita a base visual da tabela principal (thead th
+   com cursor:pointer para ordenação, mesmo padrão de .stamp para
+   status), com dois elementos próprios: barra de progresso inline na
+   coluna de taxa de conversão, e destaque sutil na linha de melhor
+   desempenho (computeSellerStats já devolve ordenado, então é sempre a
+   primeira linha). */
+#sellerStatsTbody tr:first-child{
+  box-shadow: inset 3px 0 0 0 var(--ok);
+  background: rgba(34,211,166,0.04);
+}
+.seller-rate-cell{ display:flex; align-items:center; gap:10px; min-width:140px; }
+.seller-rate-bar{ flex:1; height:6px; border-radius:99px; background:rgba(140,158,235,0.15); overflow:hidden; }
+.seller-rate-bar i{ display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--blue-500),var(--ok)); transition:width .4s var(--ease); }
+.seller-rate-value{ font-family:'Space Grotesk'; font-weight:700; font-size:12.5px; color:#fff; white-space:nowrap; }
+thead th[data-seller-sort]{ user-select:none; }
+thead th[data-seller-sort].sort-active{ color:var(--cyan-300); }
+thead th[data-seller-sort] .sort-arrow{ margin-left:4px; font-size:9px; opacity:0.8; }
+.route{color:var(--ink-300); font-family:'IBM Plex Mono'; font-size:11.5px;}
+.empty-row td{text-align:center; color:var(--ink-500); padding:40px;}
+
+footer{ text-align:center; padding:26px 16px 40px; color:var(--ink-500); font-size:11.5px; font-family:'IBM Plex Mono'; }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--navy-700); border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:var(--blue-500);}
+@media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+#pillSync.sync-ok{ color:var(--ok); border-color:rgba(34,211,166,0.35); }
+#pillSync.sync-wait{ color:var(--wait); border-color:rgba(140,154,232,0.35); }
+#pillSync.sync-error{ color:var(--lost); border-color:rgba(255,107,107,0.35); }
+.pill-btn{ cursor:pointer; font-family:'Inter'; transition:border-color .2s var(--ease), color .2s var(--ease), transform .15s var(--ease); }
+.pill-btn:hover{ border-color:var(--cyan-400); color:#fff; transform:translateY(-1px); }
+.pill-btn:active{ transform:translateY(0); }
+.pill-btn:disabled{ opacity:0.55; cursor:default; transform:none; }
+.pill-btn.spinning{ color:var(--cyan-300); border-color:rgba(0,174,239,0.4); }
+.pill-btn-ic{ display:inline-block; }
+.pill-btn.spinning .pill-btn-ic{ animation:pillBtnSpin .9s linear infinite; }
+@keyframes pillBtnSpin{ to{ transform:rotate(360deg); } }
+
+/* ===== APP SHELL: conteúdo + menu lateral de opções ===== */
+.app-shell{ display:flex; align-items:stretch; }
+.view-area{ flex:1; min-width:0; }
+.view{ display:none; }
+.view.active{ display:block; }
+/* A animação de entrada (slide direcional) foi movida para a seção
+   "FASE 4 · ETAPA 1 — transição de deslize entre telas" mais abaixo,
+   junto com a lógica de direção (dir-back) escrita em cotacoes.js. */
+
+.side-nav{
+  width:86px; flex-shrink:0; position:sticky; top:0; align-self:flex-start; height:100vh;
+  display:flex; flex-direction:column; align-items:stretch; gap:7px;
+  padding:26px 11px; background:linear-gradient(180deg, var(--card-bg-soft), var(--navy-950));
+  border-left:1px solid var(--line); z-index:60; overflow-y:auto;
+  box-shadow:-24px 0 60px -40px rgba(0,0,0,0.6);
+}
+/* ===== FASE 6 (UX/UI) — o ícone "vira" a cor, em vez de ganhar uma
+   caixa atrás =====
+   Antes o blob cobria a largura e a altura inteira do item ativo — na
+   prática, um retângulo arredondado atrás de ícone + rótulo. Agora é
+   uma massa orgânica pequena, do tamanho do próprio ícone, que desliza
+   verticalmente e centraliza exatamente sobre o ícone ativo (posição
+   calculada em updateNavBlob(), cotacoes.js, lendo o ícone real — não
+   um valor fixo). O ícone passa a nascer de dentro da cor central em
+   vez de só ganhar destaque por trás; o rótulo de texto fica livre,
+   sem nenhuma caixa. */
+.nav-blob{
+  position:absolute; left:50%; top:0; width:40px; height:40px;
+  border-radius:42% 58% 63% 37% / 45% 40% 60% 55%;
+  background:linear-gradient(150deg,var(--blue-500),var(--blue-600) 55%,var(--cyan-400));
+  box-shadow:0 10px 24px -6px rgba(0,174,239,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+  pointer-events:none; z-index:0; opacity:0;
+  transform:translate(-50%,-50%);
+  transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .25s ease;
+  animation: navBlobMorph 6s ease-in-out infinite;
+}
+.nav-blob.is-ready{ opacity:1; }
+@keyframes navBlobMorph{
+  0%,100%{ border-radius:42% 58% 63% 37% / 45% 40% 60% 55%; }
+  33%{ border-radius:58% 42% 46% 54% / 55% 60% 40% 45%; }
+  66%{ border-radius:48% 52% 58% 42% / 40% 55% 45% 60%; }
+}
+.nav-item{
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:13px 4px; border-radius:var(--r-md); border:none; background:transparent; cursor:pointer;
+  color:var(--ink-500); font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.01em;
+  transition:color .2s var(--ease), transform .16s var(--ease);
+  position:relative; z-index:1;
+}
+.nav-item:active{ transform:scale(0.95); }
+.nav-item .nav-icon{ font-size:20px; line-height:1; filter:grayscale(0.4); position:relative; display:inline-block; transition:transform .2s var(--ease), filter .2s ease; }
+.nav-item:hover{ color:var(--ink-100); }
+.nav-item:hover .nav-icon{ transform:translateY(-1px); }
+.nav-item.active{ color:#fff; }
+.nav-item.active .nav-icon{
+  filter:none; text-shadow:0 0 12px rgba(255,255,255,0.4);
+  animation:navIconPop .45s var(--ease);
+}
+@keyframes navIconPop{ 0%{ transform:scale(0.65); } 55%{ transform:scale(1.2); } 100%{ transform:scale(1); } }
+.nav-badge{
+  position:absolute; top:-4px; right:-8px; min-width:16px; height:16px; padding:0 4px;
+  border-radius:999px; background:var(--lost); color:#fff; font-family:'Inter',sans-serif;
+  font-size:10px; font-weight:700; line-height:16px; text-align:center;
+  box-shadow:0 0 0 2px var(--navy-950); display:none;
+}
+.nav-badge.show{ display:block; }
+@media(max-width:640px){
+  .side-nav{ width:64px; padding:16px 5px; gap:4px; }
+  .nav-item{ font-size:8.5px; padding:9px 2px; gap:3px; }
+  .nav-item .nav-icon{ font-size:17px; }
+  .nav-blob{ width:32px; height:32px; }
+}
+
+/* ===== SPLASH / CARREGAMENTO ===== */
+#splashGate{
+  position:fixed; inset:0; z-index:999; display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(1100px 520px at 85% -14%, rgba(0,174,239,0.2), transparent 60%),
+    radial-gradient(900px 640px at -14% 8%, rgba(47,92,255,0.26), transparent 58%),
+    var(--navy-950);
+  transition:opacity .55s var(--ease), visibility .55s var(--ease);
+}
+#splashGate.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+.splash-radar{ position:relative; width:132px; height:132px; display:flex; align-items:center; justify-content:center; }
+.splash-radar .ring{ position:absolute; inset:0; border-radius:50%; border:1px solid rgba(95,212,255,0.22); }
+.splash-radar .ring:nth-child(2){ inset:16px; border-color:rgba(95,212,255,0.3); }
+.splash-radar .ring:nth-child(3){ inset:32px; border-color:rgba(95,212,255,0.4); }
+.splash-radar .sweep{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 0deg, rgba(0,174,239,0.55), transparent 30%, transparent 100%);
+  animation:radarSpin 2.6s linear infinite; mix-blend-mode:screen;
+}
+@keyframes radarSpin{ to{ transform:rotate(360deg); } }
+.splash-radar .pulse{ position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--cyan-300); animation:radarPulse 2.6s var(--ease) infinite; }
+.splash-radar .pulse:nth-child(5){ animation-delay:1.3s; }
+@keyframes radarPulse{ 0%{ transform:scale(0.4); opacity:0.9; } 100%{ transform:scale(1.5); opacity:0; } }
+.splash-mark{ position:relative; z-index:2; width:56px; height:56px; border-radius:var(--r-md); background:linear-gradient(150deg,var(--blue-500),var(--blue-600) 60%,var(--cyan-400));
+  display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:17px; color:#fff;
+  box-shadow:0 14px 30px -10px rgba(0,174,239,0.6), inset 0 1px 0 rgba(255,255,255,0.25); }
+.splash-caption{ position:absolute; bottom:56px; left:0; right:0; text-align:center; }
+.splash-caption .line1{ font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cyan-300); }
+.splash-caption .line2{ font-family:'Space Grotesk'; font-size:13.5px; color:var(--ink-300); margin-top:6px; }
+.splash-caption .dots span{ display:inline-block; animation:dotBlink 1.4s ease-in-out infinite; opacity:0.2; }
+.splash-caption .dots span:nth-child(2){ animation-delay:.2s; }
+.splash-caption .dots span:nth-child(3){ animation-delay:.4s; }
+@keyframes dotBlink{ 0%,100%{ opacity:0.2; } 50%{ opacity:1; } }
+
+/* ===== AUTENTICAÇÃO (login / cadastro / aguardando aprovação) ===== */
+#authGate, #pendingGate{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  background:
+    radial-gradient(1100px 520px at 85% -14%, rgba(0,174,239,0.18), transparent 60%),
+    radial-gradient(900px 640px at -14% 8%, rgba(47,92,255,0.24), transparent 58%),
+    radial-gradient(700px 500px at 50% 115%, rgba(20,40,160,0.22), transparent 60%),
+    var(--navy-950);
+  position:relative; overflow:hidden;
+}
+.auth-card{
+  width:100%; max-width:428px; background:linear-gradient(175deg, rgba(255,255,255,0.05), rgba(13,22,56,0.7) 40%);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.10); border-radius:var(--r-xl);
+  padding:0 30px 30px; box-shadow:0 40px 90px -30px rgba(2,5,22,0.85), inset 0 1px 0 rgba(255,255,255,0.14);
+  position:relative; overflow:hidden; animation: authRise .6s var(--ease);
+}
+@keyframes authRise{ from{ opacity:0; transform:translateY(14px) scale(0.985); } to{ opacity:1; transform:translateY(0) scale(1); } }
+.auth-card::before{ content:''; position:absolute; right:-70px; top:-70px; width:220px; height:220px; border-radius:50%;
+  background:radial-gradient(circle, var(--cyan-400) 0%, transparent 70%); opacity:0.16; pointer-events:none; }
+
+/* faixa "manifesto" com a rota ilustrada no topo do cartão */
+.auth-visual{ margin:0 -30px 22px; padding:26px 30px 20px; position:relative;
+  background:linear-gradient(180deg, rgba(47,92,255,0.16), transparent);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.auth-visual svg{ width:100%; height:56px; display:block; overflow:visible; }
+.auth-visual .route-line{ stroke:rgba(180,200,255,0.4); stroke-width:1.4; stroke-dasharray:1 7; stroke-linecap:round; fill:none; }
+.auth-visual .route-node{ fill:var(--cyan-300); filter:drop-shadow(0 0 6px rgba(0,174,239,0.7)); }
+.auth-visual .route-node.dest{ fill:var(--ok); filter:drop-shadow(0 0 6px rgba(31,216,168,0.7)); }
+.auth-visual .route-glyph{ fill:none; stroke:var(--ink-100); stroke-width:1.3; stroke-linecap:round; stroke-linejoin:round; opacity:0.85; }
+.auth-visual .route-mover{ offset-path:path('M8,40 C 90,10 180,58 270,20 S 400,10 420,34'); animation:moveAlong 6.5s linear infinite; }
+@keyframes moveAlong{ 0%{ offset-distance:0%; opacity:0; } 6%{opacity:1;} 94%{opacity:1;} 100%{ offset-distance:100%; opacity:0; } }
+
+.doc-stamp.corner{ top:14px; right:14px; width:58px; height:58px; z-index:2; }
+
+.auth-brand{ display:flex; flex-direction:column; align-items:center; gap:9px; margin-bottom:24px; position:relative; z-index:1; }
+.auth-brand .brand-mark{ width:50px; height:50px; font-size:16px; border-radius:var(--r-md); }
+.auth-brand h1{ font-family:'Space Grotesk'; font-size:19px; font-weight:700; color:#fff; margin:0; text-align:center; letter-spacing:-0.01em; }
+.auth-brand p{ font-size:12px; color:var(--ink-300); margin:0; text-align:center; font-family:'IBM Plex Mono'; letter-spacing:0.03em; }
+
+.auth-tabs{ display:flex; gap:2px; background:var(--navy-950); border:1px solid var(--line); border-radius:var(--r-md); padding:4px; margin-bottom:22px; position:relative; }
+.auth-tab-indicator{ position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); border-radius:calc(var(--r-md) - 4px);
+  background:linear-gradient(150deg,var(--blue-500),var(--blue-600) 60%,var(--cyan-400)); box-shadow:0 8px 20px -8px rgba(0,174,239,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition:transform .3s var(--ease); z-index:0; }
+.auth-tab{ flex:1; text-align:center; padding:9px 0; border-radius:calc(var(--r-md) - 4px); font-size:12.5px; font-weight:700; color:var(--ink-500); cursor:pointer; transition:color .2s ease; position:relative; z-index:1; }
+.auth-tab.active{ color:#fff; }
+
+.auth-form{ display:none; flex-direction:column; gap:14px; position:relative; z-index:1; }
+.auth-form.active{ display:flex; }
+.auth-form .field label{ color:var(--ink-300); }
+.input-icon{ position:relative; }
+.input-icon svg{ position:absolute; left:13px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--ink-500); pointer-events:none; transition:color .18s ease; }
+.input-icon input{ padding-left:38px !important; }
+.input-icon input:focus ~ svg, .input-icon:focus-within svg{ color:var(--cyan-300); }
+.auth-error{ display:none; font-size:12px; color:var(--lost); background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.35); border-radius:var(--r-sm); padding:10px 13px; line-height:1.5; }
+.auth-error.show{ display:block; }
+.auth-ok{ display:none; font-size:12px; color:var(--ok); background:rgba(31,216,168,0.1); border:1px solid rgba(31,216,168,0.35); border-radius:var(--r-sm); padding:10px 13px; line-height:1.5; }
+.auth-ok.show{ display:block; }
+.pwd-rules{ font-size:11px; color:var(--ink-500); line-height:1.7; background:var(--navy-950); border:1px solid var(--line); border-radius:var(--r-sm); padding:11px 13px; }
+.pwd-rules .r{ display:flex; align-items:center; gap:7px; transition:color .2s ease; }
+.pwd-rules .r::before{ content:'○'; font-size:9px; color:var(--ink-500); }
+.pwd-rules .r.ok{ color:var(--ok); }
+.pwd-rules .r.ok::before{ content:'●'; color:var(--ok); }
+.auth-link{ text-align:center; font-size:12px; color:var(--cyan-300); cursor:pointer; }
+.auth-link:hover{ text-decoration:underline; }
+.auth-submit{ width:100%; padding:13px; margin-top:2px; }
+.auth-forgot{ display:none; flex-direction:column; gap:14px; }
+.auth-forgot.active{ display:flex; }
+
+/* pending / rejected screen */
+.pending-card{ width:100%; max-width:410px; text-align:center; background:linear-gradient(175deg, rgba(255,255,255,0.05), rgba(13,22,56,0.7) 40%);
+  backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.1); border-radius:var(--r-xl); padding:40px 30px; box-shadow:0 40px 90px -30px rgba(2,5,22,0.85); position:relative; }
+.pending-icon{ width:64px; height:64px; margin:0 auto 18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle, rgba(255,194,75,0.18), transparent 70%); font-size:28px; position:relative; }
+.pending-icon::before{ content:''; position:absolute; inset:0; border-radius:50%; border:1.5px dashed rgba(255,194,75,0.4); animation:spin 12s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.pending-card h2{ font-family:'Space Grotesk'; color:#fff; font-size:18px; margin:0 0 10px; }
+.pending-card p{ color:var(--ink-300); font-size:13px; line-height:1.6; margin:0 0 22px; }
+
+/* avatar */
+.avatar{ width:38px; height:38px; border-radius:50%; object-fit:cover; background:var(--navy-700); display:flex; align-items:center; justify-content:center; flex-shrink:0; border:1px solid var(--line); }
+.avatar svg{ width:60%; height:60%; opacity:0.55; }
+.avatar.lg{ width:84px; height:84px; }
+.user-pill{ display:flex; align-items:center; gap:9px; }
+.user-pill .who{ display:flex; flex-direction:column; line-height:1.25; }
+.user-pill .who b{ font-size:12.5px; color:#fff; }
+.user-pill .who span{ font-size:10.5px; color:var(--ink-500); }
+.status-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.status-dot.on{ background:var(--ok); box-shadow:0 0 0 3px rgba(34,211,166,0.2); }
+.status-dot.off{ background:var(--ink-500); }
+
+/* Perfil / Usuários views */
+.profile-card{ margin:0 clamp(16px,4vw,56px); background:var(--card-bg); border:1px solid var(--line); border-radius:var(--r-lg); padding:24px; box-shadow:var(--shadow); max-width:460px; }
+.profile-head{ display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+.profile-upload{ position:relative; cursor:pointer; }
+.profile-upload input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.profile-upload .edit-badge{ position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-radius:50%; background:var(--blue-600); display:flex; align-items:center; justify-content:center; font-size:11px; border:2px solid var(--card-bg); }
+
+.user-list{ margin:0 clamp(16px,4vw,56px) 40px; background:var(--card-bg); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow); }
+.user-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 18px; border-bottom:1px solid var(--line); cursor:pointer; transition:background .15s ease; }
+.user-row:hover{ background:rgba(255,255,255,0.03); }
+.user-row:last-child{ border-bottom:none; }
+.user-row .meta{ text-align:right; }
+.user-row .meta .last{ font-size:11px; color:var(--ink-500); font-family:'IBM Plex Mono'; }
+.pending-badge{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; padding:3px 8px; border-radius:5px; background:rgba(255,194,75,0.15); color:var(--review); }
+.approve-actions{ display:flex; gap:6px; }
+.btn-mini{ padding:6px 12px; border-radius:7px; font-size:11.5px; font-weight:700; cursor:pointer; border:none; }
+.btn-mini.ok{ background:var(--ok); color:#04231b; }
+.btn-mini.no{ background:var(--lost); color:#2b0606; }
+.activity-list{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+.activity-item{ font-size:12px; color:var(--ink-300); padding:9px 12px; background:var(--navy-950); border:1px solid var(--line); border-radius:8px; display:flex; justify-content:space-between; gap:10px; }
+.activity-item .t{ color:var(--ink-500); font-family:'IBM Plex Mono'; font-size:10.5px; white-space:nowrap; }
+
+/* ===== SPLASH SCREEN — "Inicializando BDG Group" ===== */
+/* ============================================================
+   SPLASH SCREEN — abertura do app
+   Fundo atmosférico vivo (camadas de luz à deriva, tipo aurora,
+   nas cores da marca) + um avião estilizado, sem ícones/geometria
+   rígida — só formas orgânicas, desfoque e gradientes suaves.
+   ============================================================ */
+.splash-screen{
+  position:fixed; inset:0; z-index:500; display:flex; flex-direction:column;
+  overflow:hidden; transition:opacity .65s ease; opacity:1;
+}
+.splash-screen.splash-hide{ opacity:0; pointer-events:none; }
+.splash-sky{
+  flex:1; position:relative; overflow:hidden;
+  background: linear-gradient(180deg,
+    #04081C 0%, #070F2E 16%, #0B1748 32%, #142A6E 48%,
+    #1F3D9E 64%, #2E56C4 78%, #3E5FB8 90%, #55588F 100%);
+}
+/* --- camadas de luz à deriva: dão a sensação de algo "vivo", sem formas rígidas ---
+   (dimensionadas em % do próprio contêiner, não vw/vh, pra não sofrer com a
+   barra de endereço do Chrome mobile aparecendo/sumindo) */
+.splash-aurora{ position:absolute; inset:-18% -25%; filter:blur(48px); }
+.splash-aurora span{ position:absolute; border-radius:50%; }
+.splash-aurora span:nth-child(1){
+  width:82%; height:46%; left:-14%; top:-6%;
+  background:radial-gradient(circle, rgba(0,174,239,0.46), transparent 70%);
+  animation: auroraDrift1 15s ease-in-out infinite alternate;
+}
+.splash-aurora span:nth-child(2){
+  width:72%; height:52%; right:-18%; top:16%;
+  background:radial-gradient(circle, rgba(255,194,75,0.26), transparent 70%);
+  animation: auroraDrift2 19s ease-in-out infinite alternate;
+}
+.splash-aurora span:nth-child(3){
+  width:68%; height:56%; left:6%; bottom:-20%;
+  background:radial-gradient(circle, rgba(38,67,214,0.50), transparent 70%);
+  animation: auroraDrift3 13s ease-in-out infinite alternate;
+}
+.splash-aurora span:nth-child(4){
+  width:56%; height:44%; right:0%; bottom:-8%;
+  background:radial-gradient(circle, rgba(95,212,255,0.28), transparent 70%);
+  animation: auroraDrift1 22s ease-in-out infinite alternate-reverse;
+}
+@keyframes auroraDrift1{ from{ transform:translate(0,0) scale(1);} to{ transform:translate(7%,5%) scale(1.18);} }
+@keyframes auroraDrift2{ from{ transform:translate(0,0) scale(1);} to{ transform:translate(-9%,-6%) scale(1.12);} }
+@keyframes auroraDrift3{ from{ transform:translate(0,0) scale(1);} to{ transform:translate(6%,-6%) scale(1.2);} }
+
+.splash-stars{
+  position:absolute; inset:0;
+  background-image:
+    radial-gradient(2px 2px at 20% 14%, #fff, transparent),
+    radial-gradient(2px 2px at 70% 10%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 40% 22%, rgba(255,255,255,0.85), transparent),
+    radial-gradient(1.5px 1.5px at 85% 26%, rgba(255,255,255,0.75), transparent),
+    radial-gradient(1.5px 1.5px at 55% 6%, rgba(255,255,255,0.65), transparent),
+    radial-gradient(1.5px 1.5px at 12% 34%, rgba(255,255,255,0.65), transparent),
+    radial-gradient(1.5px 1.5px at 92% 40%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1.5px 1.5px at 30% 44%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 65% 48%, rgba(255,255,255,0.4), transparent);
+  opacity:0.6; animation: splashTwinkle 3s ease-in-out infinite alternate;
+}
+@keyframes splashTwinkle{ from{opacity:0.25;} to{opacity:0.8;} }
+
+/* --- pontos de luz distantes flutuando (nós de rotas de carga, bem sutis) --- */
+.splash-motes{ position:absolute; inset:0; }
+.splash-motes span{ position:absolute; width:3px; height:3px; border-radius:50%; background:var(--cyan-300); box-shadow:0 0 6px 1px rgba(95,212,255,0.7); opacity:0; animation: moteFloat 6s ease-in-out infinite; }
+.splash-motes span:nth-child(1){ left:14%; top:62%; animation-delay:.2s; }
+.splash-motes span:nth-child(2){ left:78%; top:58%; animation-delay:1.6s; background:var(--review); box-shadow:0 0 6px 1px rgba(255,194,75,0.7); }
+.splash-motes span:nth-child(3){ left:60%; top:70%; animation-delay:3s; }
+.splash-motes span:nth-child(4){ left:30%; top:76%; animation-delay:2.1s; }
+@keyframes moteFloat{ 0%{ opacity:0; transform:translateY(0);} 30%{ opacity:.9;} 100%{ opacity:0; transform:translateY(-26px);} }
+
+/* --- avião: silhueta orgânica (elipses, sem cantos retos) + rastro desfocado --- */
+.splash-plane-wrap{ position:absolute; left:-18%; top:26%; width:64px; height:64px; animation: splashFlyFluid 8s cubic-bezier(.45,.05,.4,.95) infinite; }
+.splash-plane-trail{
+  position:absolute; right:100%; top:50%; width:150px; height:5px; transform:translateY(-50%);
+  background:linear-gradient(90deg, transparent, rgba(95,212,255,0.55) 70%, rgba(255,255,255,0.7));
+  filter:blur(4px); border-radius:99px;
+}
+.splash-plane{ position:relative; width:100%; height:100%; filter: drop-shadow(0 0 14px rgba(95,212,255,0.8)) drop-shadow(0 2px 8px rgba(0,0,0,0.35)); }
+.splash-plane svg{ width:100%; height:100%; display:block; }
+@keyframes splashFlyFluid{
+  0%{ left:-18%; top:30%; opacity:0; transform:rotate(-3deg) scale(.82); }
+  10%{ opacity:1; }
+  50%{ left:48%; top:14%; transform:rotate(3deg) scale(1); }
+  90%{ opacity:1; }
+  100%{ left:118%; top:34%; opacity:0; transform:rotate(-2deg) scale(.86); }
+}
+@media(max-width:480px){ .splash-plane-wrap{ width:48px; height:48px; } .splash-plane-trail{ width:110px; } }
+
+.splash-burst{
+  position:absolute; left:50%; top:46%; width:10px; height:10px; margin:-5px 0 0 -5px;
+  border-radius:50%; border:1.5px solid var(--cyan-300); opacity:0;
+  animation: splashBurst 1.2s ease-out .5s 1;
+}
+@keyframes splashBurst{ 0%{ width:10px;height:10px;margin:-5px 0 0 -5px; opacity:.9; } 100%{ width:280px;height:280px;margin:-140px 0 0 -140px; opacity:0; } }
+
+.splash-brand{
+  position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) scale(.86); text-align:center; width:90%; max-width:420px;
+  opacity:0; animation: splashBrandIn .8s cubic-bezier(.2,.8,.2,1) .45s forwards;
+}
+@keyframes splashBrandIn{ from{ opacity:0; transform:translate(-50%,-50%) scale(.86); } to{ opacity:1; transform:translate(-50%,-50%) scale(1); } }
+.splash-logo{
+  width:64px; height:64px; margin:0 auto 16px; border-radius:18px;
+  background:linear-gradient(135deg,var(--blue-600),var(--cyan-400)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font-family:'Space Grotesk'; font-weight:700; color:#fff;
+  box-shadow:0 14px 32px -8px rgba(0,174,239,0.6), inset 0 1px 0 rgba(255,255,255,0.3); animation: splashPulse 2.4s ease-in-out infinite;
+}
+.splash-logo .sl-top{ font-size:16px; line-height:1; letter-spacing:0.02em; }
+.splash-logo .sl-div{ width:22px; height:1px; background:rgba(255,255,255,0.45); }
+.splash-logo .sl-bottom{ font-size:9.5px; line-height:1; letter-spacing:0.12em; color:rgba(255,255,255,0.88); }
+@keyframes splashPulse{ 0%,100%{ transform:scale(1); box-shadow:0 14px 32px -8px rgba(0,174,239,0.6), inset 0 1px 0 rgba(255,255,255,0.3); } 50%{ transform:scale(1.07); box-shadow:0 14px 40px -6px rgba(0,174,239,0.85), inset 0 1px 0 rgba(255,255,255,0.3); } }
+.splash-brand h1{ font-family:'Space Grotesk'; font-size:clamp(19px,5vw,25px); color:#fff; margin:0 0 5px; font-weight:700; letter-spacing:-0.01em; }
+.splash-brand .eyebrow{ font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.14em; color:var(--cyan-300); text-transform:uppercase; margin:0 0 20px; }
+.splash-status{ display:flex; align-items:center; justify-content:center; gap:7px; font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--ink-300); min-height:16px; margin-bottom:18px; }
+.splash-status .pulse-dot{ width:6px; height:6px; border-radius:50%; background:var(--cyan-400); flex-shrink:0; animation: splashPulse 1.4s ease-in-out infinite; box-shadow:0 0 8px var(--cyan-400); }
+#splashStatusText{ transition:opacity .2s ease; }
+.splash-dots{ display:flex; gap:6px; justify-content:center; }
+.splash-dots span{ width:6px; height:6px; border-radius:50%; background:var(--cyan-400); display:inline-block; animation: splashBounce 1.2s ease-in-out infinite; }
+.splash-dots span:nth-child(2){ animation-delay:0.15s; background:var(--cyan-300); }
+.splash-dots span:nth-child(3){ animation-delay:0.3s; background:var(--review); }
+@keyframes splashBounce{ 0%,80%,100%{ transform:translateY(0); opacity:0.4;} 40%{ transform:translateY(-7px); opacity:1;} }
+
+/* --- horizonte inferior: brilho suave, sem textura de "escamas" e sem barco --- */
+.splash-horizon{ position:absolute; left:0; right:0; bottom:0; height:26%; pointer-events:none;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,194,75,0.08) 55%, rgba(255,194,75,0.14) 100%);
+}
+.splash-horizon::before{
+  content:''; position:absolute; left:-10%; right:-10%; bottom:18%; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 45%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.5) 55%, transparent);
+  filter:blur(1.5px); opacity:0.5; animation: horizonShimmer 4.5s ease-in-out infinite;
+}
+@keyframes horizonShimmer{ 0%,100%{ opacity:0.25; transform:translateX(-4%);} 50%{ opacity:0.6; transform:translateX(4%);} }
+
+/* ============================================================
+   TELA DE CARREGAMENTO PÓS-LOGIN — sincronizando dados
+   ============================================================ */
+.app-loading-screen{
+  position:fixed; inset:0; z-index:480; display:none; align-items:center; justify-content:center; overflow:hidden;
+  background: linear-gradient(180deg, #04081C 0%, #0A1440 55%, #142868 100%);
+  transition:opacity .55s ease; opacity:1;
+}
+.app-loading-screen.al-hide{ opacity:0; pointer-events:none; }
+.al-radar{ position:relative; width:150px; height:150px; margin:0 auto 26px; border-radius:50%; border:1px solid rgba(95,212,255,0.22); }
+.al-radar::before, .al-radar::after{ content:''; position:absolute; inset:22px; border-radius:50%; border:1px solid rgba(95,212,255,0.16); }
+.al-radar::after{ inset:44px; }
+.al-radar-sweep{ position:absolute; inset:0; border-radius:50%; overflow:hidden; background:conic-gradient(from 0deg, rgba(0,174,239,0.5), transparent 30%); animation: alSweep 2.4s linear infinite; }
+@keyframes alSweep{ to{ transform:rotate(360deg); } }
+.al-node{ position:absolute; width:6px; height:6px; border-radius:50%; background:var(--cyan-300); box-shadow:0 0 8px var(--cyan-300); animation: alPing 2.4s ease-in-out infinite; }
+.al-node.n1{ top:20%; left:70%; animation-delay:.1s; }
+.al-node.n2{ top:65%; left:78%; animation-delay:.5s; }
+.al-node.n3{ top:78%; left:32%; animation-delay:1s; }
+.al-node.n4{ top:30%; left:20%; animation-delay:1.5s; background:var(--review); box-shadow:0 0 8px var(--review); }
+.al-node.n5{ top:10%; left:44%; animation-delay:1.9s; }
+@keyframes alPing{ 0%,100%{ transform:scale(.6); opacity:.35; } 50%{ transform:scale(1.3); opacity:1; } }
+/* --- avião chegando: o mesmo avião do splash "pousa" na torre de controle --- */
+.al-plane{
+  position:absolute; left:50%; top:50%; width:52px; height:22px; z-index:2;
+  transform:translate(-50%,-50%) rotate(-24deg) scale(.5) translateY(-42px); opacity:0;
+  filter: drop-shadow(0 0 10px rgba(95,212,255,0.75)); pointer-events:none;
+}
+.al-plane svg{ width:100%; height:100%; display:block; }
+.app-loading-screen.al-touchdown .al-plane{ animation: alPlaneLand 1.1s cubic-bezier(.22,.9,.32,1) forwards; }
+@keyframes alPlaneLand{
+  0%{ opacity:0; transform:translate(-50%,-50%) rotate(-24deg) scale(.5) translateY(-42px); }
+  55%{ opacity:1; transform:translate(-50%,-50%) rotate(-4deg) scale(.94) translateY(2px); }
+  75%{ transform:translate(-50%,-50%) rotate(0deg) scale(1.02) translateY(-3px); }
+  100%{ opacity:1; transform:translate(-50%,-50%) rotate(0deg) scale(1) translateY(0); }
+}
+.al-touchdown-flash{
+  position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px;
+  border-radius:50%; border:1.5px solid var(--cyan-300); opacity:0; pointer-events:none;
+}
+.app-loading-screen.al-touchdown .al-touchdown-flash{ animation: alTouchdownBurst .85s ease-out .55s 1; }
+@keyframes alTouchdownBurst{
+  0%{ width:8px; height:8px; margin:-4px 0 0 -4px; opacity:.9; }
+  100%{ width:150px; height:150px; margin:-75px 0 0 -75px; opacity:0; }
+}
+.al-brand{ position:relative; text-align:center; width:90%; max-width:360px; margin:0 auto; }
+.al-brand .brand-mark{ width:44px; height:44px; margin:0 auto 14px; font-size:14px; }
+.al-brand h2{ font-family:'Space Grotesk'; font-size:17px; color:#fff; margin:0 0 20px; font-weight:600; opacity:0; }
+.al-brand h2.al-greet-in{ animation: alGreetIn .6s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes alGreetIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+.al-name{ color:var(--cyan-300); text-shadow:0 0 18px rgba(95,212,255,0.55); }
+.al-name-dot{ color:var(--cyan-400); }
+.al-checklist{ text-align:left; display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.al-step{ display:flex; align-items:center; gap:9px; font-family:'IBM Plex Mono'; font-size:12px; color:var(--ink-500); transition:color .3s ease; }
+.al-step .al-check{ width:16px; height:16px; flex-shrink:0; border-radius:50%; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10px; color:transparent; transition:all .3s ease; }
+.al-step.done{ color:var(--ink-100); }
+.al-step.done .al-check{ border-color:var(--ok); background:rgba(34,211,166,0.15); color:var(--ok); }
+.al-progress{ height:3px; border-radius:99px; background:var(--navy-800); overflow:hidden; }
+.al-progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--blue-600),var(--cyan-400)); transition:width .5s ease; }
+
+/* Fase Extra · Etapa 3 — sinalização visual de "valor manual" (Plano Fase
+   Extra, Seção 7): campo calculável que o vendedor sobrescreveu à mão fica
+   com esta borda; volta ao normal quando o motor recalcula de novo. */
+input.valor-manual{
+  border:1px solid #f5a623 !important;
+  background:rgba(245,166,35,.08) !important;
+  box-shadow:0 0 0 1px rgba(245,166,35,.35) inset;
+}
+
+/* ============================================================
+   ROUTE MAP WIDGET — Fase 5 (Redesign Premium) · Etapa 2/6
+   ============================================================
+   Widget flutuante persistente (canto inferior direito, sobre tudo,
+   em todas as views). Nunca empurra o layout — position:fixed sempre.
+   Usa os tokens de glass/elevation da Etapa 1 (design-tokens).
+   z-index:850 — acima do modal de edição (200) para continuar
+   acessível mesmo com um modal aberto (é quando o modo contextual
+   é mais útil); abaixo do splash de carregamento (999).
+   ============================================================ */
+/* CORREÇÃO — o widget não deve aparecer na tela de login/cadastro.
+   route-map.js chama buildWidgetDom() no carregamento do módulo e anexa a
+   bolha direto no <body>, então ela ficava visível por cima do authGate,
+   do splash e da tela de "aguardando aprovação" — nada no código
+   escondia o widget enquanto o usuário não estava logado.
+   Agora ele só aparece quando <body> recebe a classe .app-ready, que
+   auth.js adiciona nos mesmos dois pontos em que libera #appRoot
+   (acesso normal e bypass de manutenção) e remove no logout. */
+.route-map-widget{
+  position:fixed; right:20px; bottom:20px; z-index:850;
+  display:none; flex-direction:column; align-items:flex-end;
+  font-family:var(--font-body);
+}
+body.app-ready .route-map-widget{ display:flex; }
+
+/* ---------- bolha recolhida (estado padrão) ---------- */
+.rmw-bubble{
+  width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
+  position:relative;
+  background:
+    radial-gradient(22px 14px at 30% 20%, rgba(255,255,255,0.28), transparent 65%),
+    linear-gradient(150deg, var(--blue-500), var(--blue-600) 60%, var(--cyan-400));
+  box-shadow: var(--elev-2), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  display:flex; align-items:center; justify-content:center;
+  transition: transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+}
+.rmw-bubble:hover{ transform: translateY(-2px) scale(1.04); box-shadow: var(--elev-3), var(--elev-glow-cyan); }
+.rmw-bubble:active{ transform: scale(0.96); }
+.rmw-bubble-icon{ width:26px; height:26px; fill:#fff; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
+.rmw-bubble-dot{
+  position:absolute; top:2px; right:2px; width:12px; height:12px; border-radius:50%;
+  background: var(--ok); border:2px solid var(--navy-950);
+  opacity:0; transform:scale(0.4); transition: all var(--dur-base) var(--ease);
+}
+.rmw-bubble-dot.show{ opacity:1; transform:scale(1); animation: rmwPulse 2s var(--ease) infinite; }
+@keyframes rmwPulse{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(31,216,168,0.5); }
+  50%{ box-shadow: 0 0 0 5px rgba(31,216,168,0); }
+}
+
+/* ---------- painel expandido — CENTRALIZADO NA TELA (não mais ancorado
+   ao canto). Continua position:fixed/flutuante — nunca modal com overlay
+   escurecido, conforme pedido: "flutuante mas centralizado". O .rmw-scrim
+   é uma camada invisível full-screen só para capturar clique-fora-fecha,
+   sem escurecer nada atrás.
+   Especificação de melhorias, item 9 — reforço de separação visual:
+   backdrop-filter:blur leve (sem escurecer, só desfocar) ajuda a separar
+   o mapa do conteúdo por trás sem contradizer a decisão arquitetural
+   acima ("sem overlay opaco") — background continua transparent. ---------- */
+.rmw-scrim{
+  position:fixed; inset:0; z-index:849; background:transparent;
+  opacity:0; pointer-events:none;
+  transition: opacity var(--dur-base) var(--ease);
+}
+/* O backdrop-filter é aplicado SOMENTE no estado expandido, e não entra na
+   transição: um backdrop-filter de tela cheia sempre presente (mesmo com
+   blur(0px)/opacity:0) força o navegador a recompor o fundo inteiro a cada
+   quadro, o que pesa bastante no celular. Assim o custo só existe enquanto
+   o mapa está realmente aberto. */
+/* Desfoque de tela cheia REMOVIDO em 01/08 a pedido do usuário: no celular o
+   backdrop-filter cobrindo toda a viewport obrigava o navegador a recompor a
+   página inteira a cada quadro, e aparecia embaçado e reduzido em vez de só
+   separar o painel do fundo. Volta ao combinado — "flutuante mas
+   centralizado", scrim como camada invisível de clique-fora-fecha. */
+.route-map-widget.is-expanded .rmw-scrim{
+  opacity:1; pointer-events:auto;
+}
+
+.rmw-panel{
+  position:fixed; left:50%; top:50%;
+  width:min(480px, calc(100vw - 40px)); max-height:min(640px, calc(100vh - 80px));
+  display:flex; flex-direction:column;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border:1px solid var(--glass-border); border-radius:var(--r-xl);
+  box-shadow: var(--elev-3), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  overflow:hidden;
+  opacity:0; transform: translate(-50%,-50%) scale(0.92); pointer-events:none;
+  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
+}
+.route-map-widget.is-expanded .rmw-panel{
+  opacity:1; transform: translate(-50%,-50%) scale(1); pointer-events:auto;
+}
+.route-map-widget.is-expanded .rmw-bubble{
+  box-shadow: var(--elev-2), 0 0 0 2px var(--cyan-400) inset;
+}
+@media (prefers-reduced-motion: reduce){
+  .rmw-panel, .rmw-bubble, .rmw-bubble-dot, .rmw-scrim{ transition:none; }
+}
+
+.rmw-back{
+  width:24px; height:24px; border-radius:7px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.03);
+  color:var(--ink-300); cursor:pointer; display:flex; align-items:center; justify-content:center; margin-right:2px;
+  transition: all var(--dur-fast) var(--ease); flex-shrink:0;
+}
+.rmw-back svg{ width:13px; height:13px; stroke:currentColor; stroke-width:2.2; fill:none; }
+.rmw-back:hover{ border-color:var(--cyan-400); color:var(--cyan-300); }
+
+.rmw-panel-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 14px 10px; border-bottom:1px solid var(--glass-border); flex-shrink:0;
+}
+.rmw-panel-title{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:600; font-size:var(--fs-sm); color:#fff; }
+.rmw-panel-title-icon{ width:16px; height:16px; fill:var(--cyan-300); flex-shrink:0; }
+.rmw-close{
+  width:26px; height:26px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.03);
+  color:var(--ink-300); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition: all var(--dur-fast) var(--ease);
+}
+.rmw-close svg{ width:13px; height:13px; stroke:currentColor; stroke-width:2; fill:none; }
+.rmw-close:hover{ border-color:var(--cyan-400); color:var(--cyan-300); background:rgba(0,174,239,0.08); }
+
+.rmw-map-wrap{
+  position:relative; background: radial-gradient(120% 100% at 50% 30%, var(--navy-800), var(--navy-950));
+  aspect-ratio: 2 / 1; flex-shrink:0;
+}
+.rmw-svg{ width:100%; height:100%; display:block; }
+.rmw-ocean{ fill: transparent; }
+.rmw-landmass{
+  fill: var(--navy-700); stroke: rgba(0,174,239,0.35); stroke-width:0.7;
+}
+
+/* pinos */
+.rmw-pin-dot{ fill:#fff; }
+.rmw-pin-glow{ fill: var(--cyan-400); opacity:0.35; }
+.rmw-pin-origin .rmw-pin-dot{ fill: var(--cyan-300); }
+.rmw-pin-origin .rmw-pin-glow{ fill: var(--cyan-400); opacity:0.5; }
+.rmw-pin-dest .rmw-pin-dot{ fill: var(--ok); }
+.rmw-pin-dest .rmw-pin-glow{ fill: var(--ok); opacity:0.5; }
+.rmw-pin-overview .rmw-pin-dot{ fill: var(--ink-300); }
+.rmw-pin-overview .rmw-pin-glow{ fill: var(--cyan-400); opacity:0.28; }
+.rmw-pin{ transition: transform var(--dur-fast) var(--ease); }
+.rmw-pin-overview .rmw-pin-dot{ fill: var(--pin-color, var(--ink-300)); }
+.rmw-pin-overview .rmw-pin-glow{ fill: var(--pin-color, var(--cyan-400)); opacity:0.32; }
+
+/* pinos de aeroporto/porto clicáveis no modo overview — destaque "tem
+   cotação" pedido: glow pulsante em ciano, maior conforme o volume de
+   rotas conectadas àquele ponto específico (não mais por país). */
+.rmw-pin-country{ cursor:pointer; }
+.rmw-pin-country .rmw-pin-dot{ fill: var(--cyan-300); }
+.rmw-pin-country .rmw-pin-glow{ fill: var(--cyan-400); opacity:0.5; animation: rmwCountryGlow 2.6s ease-in-out infinite; }
+.rmw-pin-country:hover{ transform: scale(1.18); }
+@keyframes rmwCountryGlow{
+  0%,100%{ opacity:0.35; r:9; }
+  50%{ opacity:0.6; r:12; }
+}
+.rmw-pin-country-main .rmw-pin-dot{ fill:#fff; }
+.rmw-pin-country-main .rmw-pin-glow{ fill: var(--cyan-300); opacity:0.55; }
+@media (prefers-reduced-motion: reduce){
+  .rmw-pin-country .rmw-pin-glow{ animation:none; }
+}
+
+/* rota animada */
+.rmw-route-line{
+  fill:none; stroke: var(--cyan-300); stroke-width:1.1; stroke-dasharray:3 2.5; opacity:0.75;
+}
+.rmw-route-pulse{ fill: var(--cyan-300); filter: drop-shadow(0 0 3px rgba(95,212,255,0.9)); }
+
+.rmw-info{ padding:12px 14px 14px; overflow-y:auto; flex:1; min-height:0; }
+
+.rmw-route-summary{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.rmw-route-endpoint{ display:flex; align-items:center; gap:7px; flex:1; min-width:0; }
+.rmw-route-endpoint b{ display:block; font-size:var(--fs-sm); color:#fff; font-family:var(--font-display); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rmw-route-endpoint span{ display:block; font-size:10px; color:var(--ink-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rmw-route-arrow{ color:var(--cyan-300); font-size:14px; flex-shrink:0; }
+.rmw-endpoint-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.rmw-endpoint-dot.origin{ background: var(--cyan-300); box-shadow:0 0 6px rgba(95,212,255,0.7); }
+.rmw-endpoint-dot.dest{ background: var(--ok); box-shadow:0 0 6px rgba(31,216,168,0.7); }
+
+.rmw-route-stats, .rmw-overview-summary{ display:flex; gap:8px; flex-wrap:wrap; }
+.rmw-stat{
+  flex:1; min-width:84px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  border-radius:var(--r-sm); padding:7px 10px;
+}
+.rmw-stat span{ display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-500); margin-bottom:2px; }
+.rmw-stat b{ font-family:var(--font-mono); font-size:var(--fs-sm); color:#fff; }
+
+/* lista de rotas conectadas a um aeroporto/porto específico, coloridas
+   por status (STATUS_COLORS, mesma paleta usada em toda a aplicação) */
+.rmw-country-header{ font-size:11px; color:var(--ink-500); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em; }
+.rmw-country-list{ display:flex; flex-direction:column; gap:6px; }
+.rmw-country-route{
+  display:flex; align-items:center; gap:9px; padding:8px 10px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:var(--r-sm);
+  transition: background var(--dur-fast) var(--ease);
+}
+.rmw-country-route:hover{ background:rgba(255,255,255,0.055); }
+.rmw-status-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; box-shadow:0 0 6px currentColor; }
+.rmw-country-route-txt{ flex:1; min-width:0; }
+.rmw-country-route-txt b{ display:block; font-family:var(--font-mono); font-size:11.5px; color:#fff; }
+.rmw-country-route-txt span{ display:block; font-size:10.5px; color:var(--ink-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rmw-status-label{ font-size:10px; font-weight:600; white-space:nowrap; flex-shrink:0; }
+
+.rmw-hint{ font-size:11px; color:var(--ink-500); margin:10px 2px 0; line-height:1.5; }
+/* Especificação de melhorias, item 9 — link discreto (mesmo tom do texto
+   ao redor), mas com sublinhado e cor de destaque para sinalizar que é
+   clicável, coerente com o restante do app (var(--cyan-300) já é usado
+   em outros links/badges de destaque). */
+.rmw-hint-link{ color:var(--cyan-300); text-decoration:underline; cursor:pointer; }
+.rmw-hint-link:hover{ color:#fff; }
+
+.rmw-empty{ text-align:center; padding:18px 8px; }
+.rmw-empty-icon{ font-size:26px; margin-bottom:8px; opacity:0.8; }
+.rmw-empty b{ display:block; font-size:var(--fs-sm); color:var(--ink-100); margin-bottom:4px; }
+.rmw-empty span{ font-size:11px; color:var(--ink-500); line-height:1.5; }
+
+/* ---------- responsividade ---------- */
+@media (max-width:520px){
+  .route-map-widget{ right:14px; bottom:14px; }
+  .rmw-bubble{ width:50px; height:50px; }
+  .rmw-panel{ width:calc(100vw - 24px); max-height:calc(100vh - 60px); }
+}
